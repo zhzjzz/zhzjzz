@@ -93,9 +93,27 @@ const submitRegister = async () => {
     </article>
 
     <el-card class="login-card">
-      <div class="auth-switch">
-        <button class="auth-btn" :class="{ active: isLoginMode }" type="button" @click="authMode = 'login'">登录</button>
-        <button class="auth-btn" :class="{ active: !isLoginMode }" type="button" @click="authMode = 'register'">注册</button>
+      <div class="auth-switch" role="tablist" aria-label="登录注册切换">
+        <button
+          class="auth-btn"
+          :class="{ active: isLoginMode }"
+          type="button"
+          role="tab"
+          :aria-selected="isLoginMode"
+          @click="authMode = 'login'"
+        >
+          登录
+        </button>
+        <button
+          class="auth-btn"
+          :class="{ active: !isLoginMode }"
+          type="button"
+          role="tab"
+          :aria-selected="!isLoginMode"
+          @click="authMode = 'register'"
+        >
+          注册
+        </button>
       </div>
 
       <div class="login-title">

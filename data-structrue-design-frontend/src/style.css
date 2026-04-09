@@ -14,7 +14,7 @@
   --radius-badge: 14px;
   --radius-card: 20px;
   --radius-large: 32px;
-  --font-family-base: 'Airbnb Cereal VF', Circular, -apple-system, system-ui, Roboto, 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-family-base: Circular, -apple-system, system-ui, Roboto, 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 
   font-family: var(--font-family-base);
   line-height: 1.43;

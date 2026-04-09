@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '../stores/app'
+import { Search } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,11 +39,13 @@ const logout = () => {
       <span>Anywhere</span>
       <span>Any week</span>
       <span>Add guests</span>
-      <button class="search-btn" type="button" aria-label="搜索">⌕</button>
+      <button class="search-btn" type="button" aria-label="搜索">
+        <el-icon><Search /></el-icon>
+      </button>
     </div>
 
     <div class="user-actions">
-      <button class="host-link" type="button">Become a Host</button>
+      <span class="host-link">Become a Host</span>
       <div class="user-chip">
         <span class="user-name">{{ appStore.user.name || '未登录' }}</span>
         <button class="logout-btn" type="button" @click="logout">退出</button>
@@ -50,13 +53,14 @@ const logout = () => {
     </div>
   </header>
 
-  <nav class="category-bar">
+  <nav class="category-bar" aria-label="主功能导航">
     <button
       v-for="item in navItems"
       :key="item.path"
       type="button"
       class="category-pill"
       :class="{ active: activePath === item.path }"
+      :aria-current="activePath === item.path ? 'page' : undefined"
       @click="go(item.path)"
     >
       {{ item.label }}
