@@ -1,7 +1,14 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import AppNav from './components/AppNav.vue'
 </script>
 
 <template>
-  <HelloWorld />
+  <main class="container">
+    <AppNav />
+    <RouterView />
+  </main>
 </template>
+
+<style scoped>
+.container { max-width: 1080px; margin: 0 auto; padding: 20px; }
+</style>
