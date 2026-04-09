@@ -15,7 +15,7 @@
 ### 后端启动
 
 ```bash
-cd /home/runner/work/zhzjzz/zhzjzz/backend
+cd backend
 mvn spring-boot:run
 ```
 
@@ -29,7 +29,7 @@ mvn spring-boot:run
 ### 前端启动
 
 ```bash
-cd /home/runner/work/zhzjzz/zhzjzz/frontend
+cd frontend
 npm install
 npm run dev
 ```
