@@ -22,13 +22,6 @@ const go = (path) => {
   router.push(path)
 }
 
-const activateOnKeyboard = (event, path) => {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault()
-    go(path)
-  }
-}
-
 const logout = () => {
   appStore.logout()
   router.push('/login')
@@ -37,33 +30,29 @@ const logout = () => {
 
 <template>
   <header class="nav-shell">
-    <div
+    <button
       class="brand"
-      role="button"
-      tabindex="0"
+      type="button"
       aria-label="返回首页"
       @click="go('/')"
-      @keydown="activateOnKeyboard($event, '/')"
     >
       <strong>Travel.AI</strong>
       <span>个性化旅游系统</span>
-    </div>
+    </button>
 
-    <div
+    <button
       class="search-pill"
-      role="button"
-      tabindex="0"
+      type="button"
       aria-label="搜索目的地"
       @click="go('/destinations')"
-      @keydown="activateOnKeyboard($event, '/destinations')"
     >
       <span>Anywhere</span>
       <span>Any week</span>
       <span>Add guests</span>
-      <button class="search-btn" type="button" aria-label="搜索">
+      <span class="search-btn" aria-hidden="true">
         <el-icon><Search /></el-icon>
-      </button>
-    </div>
+      </span>
+    </button>
 
     <div class="user-actions">
       <span class="host-link">Become a Host</span>
@@ -110,6 +99,10 @@ const logout = () => {
   flex-direction: column;
   gap: 2px;
   cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
 }
 
 .brand:focus-visible,
@@ -160,12 +153,12 @@ const logout = () => {
 .search-btn {
   width: 32px;
   height: 32px;
-  border: none;
   border-radius: 50%;
   background: #ff385c;
   color: #ffffff;
+  display: grid;
+  place-items: center;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .user-actions {

@@ -31,7 +31,7 @@ onMounted(loadFoods)
     <section class="listings">
       <article class="listing-card" v-for="item in foods" :key="item.id">
         <div class="listing-media">
-          <button class="wishlist" type="button" aria-hidden="true" tabindex="-1">♡</button>
+          <span class="wishlist" aria-hidden="true">♡</span>
           <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" />
           <div v-else class="image-placeholder">暂无图片</div>
         </div>
