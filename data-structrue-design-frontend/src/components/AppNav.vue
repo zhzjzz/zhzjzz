@@ -41,6 +41,7 @@ const logout = () => {
       class="brand"
       role="button"
       tabindex="0"
+      aria-label="返回首页"
       @click="go('/')"
       @keydown="activateOnKeyboard($event, '/')"
     >
@@ -52,6 +53,7 @@ const logout = () => {
       class="search-pill"
       role="button"
       tabindex="0"
+      aria-label="搜索目的地"
       @click="go('/destinations')"
       @keydown="activateOnKeyboard($event, '/destinations')"
     >

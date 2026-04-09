@@ -1,12 +1,18 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { getTopFoods } from '../api/travel'
 
 const foods = ref([])
+const router = useRouter()
 
 const loadFoods = async () => {
   const { data } = await getTopFoods(5)
   foods.value = data
+}
+
+const goDestinations = () => {
+  router.push('/destinations')
 }
 
 onMounted(loadFoods)
@@ -19,13 +25,13 @@ onMounted(loadFoods)
         <h1>Find your next stay with 智能体旅游系统</h1>
         <p>像浏览旅行杂志一样探索推荐目的地、路线规划、日记与多人协作行程。</p>
       </div>
-      <el-button type="primary" size="large">开始探索</el-button>
+      <el-button type="primary" size="large" @click="goDestinations">开始探索</el-button>
     </el-card>
 
     <section class="listings">
       <article class="listing-card" v-for="item in foods" :key="item.id">
         <div class="listing-media">
-          <button class="wishlist" type="button" :aria-label="`收藏 ${item.name}`">♡</button>
+          <button class="wishlist" type="button" aria-hidden="true" tabindex="-1">♡</button>
           <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" />
           <div v-else class="image-placeholder">暂无图片</div>
         </div>
