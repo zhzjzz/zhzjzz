@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -34,8 +35,26 @@ public interface DestinationRepository {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Destination destination);
 
+    @Update("""
+            UPDATE destination
+            SET name = #{name},
+                scene_type = #{sceneType},
+                category = #{category},
+                heat = #{heat},
+                rating = #{rating},
+                description = #{description},
+                latitude = #{latitude},
+                longitude = #{longitude}
+            WHERE id = #{id}
+            """)
+    int update(Destination destination);
+
     default Destination save(Destination destination) {
-        insert(destination);
+        if (destination.getId() == null) {
+            insert(destination);
+        } else {
+            update(destination);
+        }
         return destination;
     }
 }

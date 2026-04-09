@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -24,8 +25,25 @@ public interface ItineraryRepository {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Itinerary itinerary);
 
+    @Update("""
+            UPDATE itinerary
+            SET name = #{name},
+                owner = #{owner},
+                collaborators = #{collaborators},
+                strategy = #{strategy},
+                transport_mode = #{transportMode},
+                notes = #{notes},
+                updated_at = #{updatedAt}
+            WHERE id = #{id}
+            """)
+    int update(Itinerary itinerary);
+
     default Itinerary save(Itinerary itinerary) {
-        insert(itinerary);
+        if (itinerary.getId() == null) {
+            insert(itinerary);
+        } else {
+            update(itinerary);
+        }
         return itinerary;
     }
 }
