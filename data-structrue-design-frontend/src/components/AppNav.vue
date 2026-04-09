@@ -38,7 +38,7 @@ const logout = () => {
       <span>Anywhere</span>
       <span>Any week</span>
       <span>Add guests</span>
-      <button class="search-btn" type="button">⌕</button>
+      <button class="search-btn" type="button" aria-label="搜索">⌕</button>
     </div>
 
     <div class="user-actions">

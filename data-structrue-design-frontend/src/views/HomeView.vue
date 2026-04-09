@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { getTopFoods } from '../api/travel'
+import heroImage from '../assets/hero.png'
 
 const foods = ref([])
 
@@ -25,8 +26,8 @@ onMounted(loadFoods)
     <section class="listings">
       <article class="listing-card" v-for="item in foods" :key="item.id">
         <div class="listing-media">
-          <button class="wishlist" type="button">♡</button>
-          <img src="../assets/hero.png" :alt="item.name" />
+          <button class="wishlist" type="button" :aria-label="`收藏 ${item.name}`">♡</button>
+          <img :src="item.imageUrl || heroImage" :alt="item.name" />
         </div>
         <div class="listing-body">
           <h3>{{ item.name }}</h3>
@@ -107,6 +108,11 @@ onMounted(loadFoods)
   box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
   color: #222222;
   font-size: 16px;
+}
+
+.wishlist:focus-visible {
+  outline: 2px solid #ff385c;
+  outline-offset: 2px;
 }
 
 .listing-body {
