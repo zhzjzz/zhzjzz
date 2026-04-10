@@ -9,6 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RoutePlanResponse {
     private List<Long> pathNodeIds;
+    private List<Long> visitOrderNodeIds;
     private Double totalDistanceMeters;
     private Double totalTravelMinutes;
 }

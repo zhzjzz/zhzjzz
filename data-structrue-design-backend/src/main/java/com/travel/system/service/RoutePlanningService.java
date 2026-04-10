@@ -4,8 +4,11 @@ import com.travel.system.dto.RoutePlanResponse;
 import com.travel.system.model.RoadEdge;
 import com.travel.system.repository.RoadEdgeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 public class RoutePlanningService {
@@ -17,13 +20,82 @@ public class RoutePlanningService {
     }
 
     public RoutePlanResponse shortestPath(Long fromId, Long toId, String strategy, String transport) {
+        PathResult result = computePath(fromId, toId, strategy, transport);
+        return new RoutePlanResponse(result.pathNodeIds(), List.of(toId), result.totalDistanceMeters(), result.totalTravelMinutes());
+    }
+
+    public RoutePlanResponse multiTargetPath(Long fromId, List<Long> targetNodeIds, String strategy, String transport) {
+        if (targetNodeIds == null || targetNodeIds.isEmpty()) {
+            throw new ResponseStatusException(BAD_REQUEST, "多目标规划至少需要一个目标节点");
+        }
+
+        LinkedHashSet<Long> remainingTargets = new LinkedHashSet<>();
+        for (Long targetId : targetNodeIds) {
+            if (targetId == null) {
+                continue;
+            }
+            if (!targetId.equals(fromId)) {
+                remainingTargets.add(targetId);
+            }
+        }
+
+        if (remainingTargets.isEmpty()) {
+            throw new ResponseStatusException(BAD_REQUEST, "目标节点不能全部与起点相同");
+        }
+
+        List<Long> visitOrder = new ArrayList<>();
+        List<Long> fullPath = new ArrayList<>();
+        fullPath.add(fromId);
+
+        long current = fromId;
+        double totalDistance = 0.0;
+        double totalTime = 0.0;
+
+        while (!remainingTargets.isEmpty()) {
+            long currentNode = current;
+            PathChoice nextChoice = remainingTargets.stream()
+                    .map(targetId -> new PathChoice(targetId, computePath(currentNode, targetId, strategy, transport)))
+                    .filter(choice -> !choice.pathResult().pathNodeIds().isEmpty())
+                    .min(Comparator.comparingDouble(choice -> choice.pathResult().cost(strategy)))
+                    .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "存在无法到达的目标节点，请检查道路图连通性"));
+
+            appendSegment(fullPath, nextChoice.pathResult().pathNodeIds());
+            totalDistance += nextChoice.pathResult().totalDistanceMeters();
+            totalTime += nextChoice.pathResult().totalTravelMinutes();
+            current = nextChoice.targetNodeId();
+            visitOrder.add(nextChoice.targetNodeId());
+            remainingTargets.remove(nextChoice.targetNodeId());
+        }
+
+        PathResult returnPath = computePath(current, fromId, strategy, transport);
+        if (returnPath.pathNodeIds().isEmpty()) {
+            throw new ResponseStatusException(BAD_REQUEST, "无法从最后一个目标点返回起点，请检查道路图连通性");
+        }
+        appendSegment(fullPath, returnPath.pathNodeIds());
+        totalDistance += returnPath.totalDistanceMeters();
+        totalTime += returnPath.totalTravelMinutes();
+
+        return new RoutePlanResponse(fullPath, visitOrder, totalDistance, totalTime);
+    }
+
+    public Map<Long, Double> shortestDistanceMap(Long fromId, String transport) {
+        Map<Long, Double> dist = new HashMap<>();
+        runShortestPath(fromId, "distance", transport, dist, new HashMap<>());
+        return dist;
+    }
+
+    private PathResult computePath(Long fromId, Long toId, String strategy, String transport) {
         Map<Long, Double> dist = new HashMap<>();
         Map<Long, Long> prev = new HashMap<>();
         runShortestPath(fromId, strategy, transport, dist, prev);
 
         List<Long> path = buildPath(prev, fromId, toId);
-        double totalDistance = 0;
-        double totalTimeMinutes = 0;
+        if (path.isEmpty()) {
+            return new PathResult(List.of(), Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+        }
+
+        double totalDistance = 0.0;
+        double totalTimeMinutes = 0.0;
         for (int i = 0; i + 1 < path.size(); i++) {
             Long s = path.get(i);
             Long t = path.get(i + 1);
@@ -36,14 +108,7 @@ public class RoutePlanningService {
                 totalTimeMinutes += travelTime(edge);
             }
         }
-
-        return new RoutePlanResponse(path, totalDistance, totalTimeMinutes);
-    }
-
-    public Map<Long, Double> shortestDistanceMap(Long fromId, String transport) {
-        Map<Long, Double> dist = new HashMap<>();
-        runShortestPath(fromId, "distance", transport, dist, new HashMap<>());
-        return dist;
+        return new PathResult(path, totalDistance, totalTimeMinutes);
     }
 
     private void runShortestPath(Long fromId,
@@ -90,6 +155,16 @@ public class RoutePlanningService {
         return List.of();
     }
 
+    private void appendSegment(List<Long> fullPath, List<Long> segment) {
+        if (segment.isEmpty()) {
+            return;
+        }
+        int startIndex = fullPath.isEmpty() ? 0 : 1;
+        for (int i = startIndex; i < segment.size(); i++) {
+            fullPath.add(segment.get(i));
+        }
+    }
+
     private boolean allow(String allowedTransport, String currentTransport) {
         if (allowedTransport == null || currentTransport == null) {
             return true;
@@ -109,5 +184,14 @@ public class RoutePlanningService {
     }
 
     private record NodeDistance(Long nodeId, double distance) {
+    }
+
+    private record PathResult(List<Long> pathNodeIds, double totalDistanceMeters, double totalTravelMinutes) {
+        private double cost(String strategy) {
+            return "time".equalsIgnoreCase(strategy) ? totalTravelMinutes : totalDistanceMeters;
+        }
+    }
+
+    private record PathChoice(Long targetNodeId, PathResult pathResult) {
     }
 }
