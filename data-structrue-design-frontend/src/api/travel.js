@@ -24,4 +24,5 @@ export const planRoute = (payload) => http.post('/routes/plan', payload)
 
 // 场所查询接口。
 export const listRoadNodes = () => http.get('/road-nodes')
+export const getRoadGraph = () => http.get('/road-nodes/graph')
 export const searchNearbyFacilities = (params) => http.get('/facilities/nearby', { params })

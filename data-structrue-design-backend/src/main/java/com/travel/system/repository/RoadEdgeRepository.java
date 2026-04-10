@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -35,6 +36,17 @@ public interface RoadEdgeRepository {
             @Result(column = "to_longitude", property = "toNode.longitude")
     })
     List<RoadEdge> findByFromNodeId(Long fromNodeId);
+
+    @Select("""
+            SELECT e.id, e.from_node_id, e.to_node_id, e.distance_meters, e.ideal_speed, e.congestion, e.allowed_transport,
+                   fn.id AS from_ref_id, fn.name AS from_name, fn.node_type AS from_node_type, fn.latitude AS from_latitude, fn.longitude AS from_longitude,
+                   tn.id AS to_ref_id, tn.name AS to_name, tn.node_type AS to_node_type, tn.latitude AS to_latitude, tn.longitude AS to_longitude
+            FROM road_edge e
+            LEFT JOIN road_node fn ON fn.id = e.from_node_id
+            LEFT JOIN road_node tn ON tn.id = e.to_node_id
+            """)
+    @ResultMap("roadEdgeResultMap")
+    List<RoadEdge> findAll();
 
     @Insert("""
             INSERT INTO road_edge(from_node_id, to_node_id, distance_meters, ideal_speed, congestion, allowed_transport)
