@@ -3,6 +3,7 @@ import { useAppStore } from "../stores/app";
 import HomeView from "../views/HomeView.vue";
 import DestinationView from "../views/DestinationView.vue";
 import RouteView from "../views/RouteView.vue";
+import FacilityView from "../views/FacilityView.vue";
 import DiaryView from "../views/DiaryView.vue";
 import ItineraryView from "../views/ItineraryView.vue";
 import LoginView from "../views/LoginView.vue";
@@ -17,6 +18,7 @@ const routes = [
   { path: "/", name: "home", component: HomeView },
   { path: "/destinations", name: "destinations", component: DestinationView },
   { path: "/routes", name: "routes", component: RouteView },
+  { path: "/facilities", name: "facilities", component: FacilityView },
   { path: "/diaries", name: "diaries", component: DiaryView },
   { path: "/itineraries", name: "itineraries", component: ItineraryView },
 ];

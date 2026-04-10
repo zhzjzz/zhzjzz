@@ -19,33 +19,7 @@ public class RoutePlanningService {
     public RoutePlanResponse shortestPath(Long fromId, Long toId, String strategy, String transport) {
         Map<Long, Double> dist = new HashMap<>();
         Map<Long, Long> prev = new HashMap<>();
-        PriorityQueue<long[]> pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a[1]));
-
-        dist.put(fromId, 0.0);
-        pq.offer(new long[]{fromId, 0});
-
-        while (!pq.isEmpty()) {
-            long[] cur = pq.poll();
-            long node = cur[0];
-            double curDist = dist.getOrDefault(node, Double.MAX_VALUE);
-            if (node == toId) {
-                break;
-            }
-
-            for (RoadEdge edge : roadEdgeRepository.findByFromNodeId(node)) {
-                if (!allow(edge.getAllowedTransport(), transport)) {
-                    continue;
-                }
-                long next = edge.getToNode().getId();
-                double weight = "time".equalsIgnoreCase(strategy) ? travelTime(edge) : safe(edge.getDistanceMeters());
-                double cand = curDist + weight;
-                if (cand < dist.getOrDefault(next, Double.MAX_VALUE)) {
-                    dist.put(next, cand);
-                    prev.put(next, node);
-                    pq.offer(new long[]{next, (long) cand});
-                }
-            }
-        }
+        runShortestPath(fromId, strategy, transport, dist, prev);
 
         List<Long> path = buildPath(prev, fromId, toId);
         double totalDistance = 0;
@@ -64,6 +38,43 @@ public class RoutePlanningService {
         }
 
         return new RoutePlanResponse(path, totalDistance, totalTimeMinutes);
+    }
+
+    public Map<Long, Double> shortestDistanceMap(Long fromId, String transport) {
+        Map<Long, Double> dist = new HashMap<>();
+        runShortestPath(fromId, "distance", transport, dist, new HashMap<>());
+        return dist;
+    }
+
+    private void runShortestPath(Long fromId,
+                                 String strategy,
+                                 String transport,
+                                 Map<Long, Double> dist,
+                                 Map<Long, Long> prev) {
+        PriorityQueue<NodeDistance> pq = new PriorityQueue<>(Comparator.comparingDouble(NodeDistance::distance));
+        dist.put(fromId, 0.0);
+        pq.offer(new NodeDistance(fromId, 0.0));
+
+        while (!pq.isEmpty()) {
+            NodeDistance current = pq.poll();
+            if (current.distance() > dist.getOrDefault(current.nodeId(), Double.MAX_VALUE)) {
+                continue;
+            }
+
+            for (RoadEdge edge : roadEdgeRepository.findByFromNodeId(current.nodeId())) {
+                if (!allow(edge.getAllowedTransport(), transport)) {
+                    continue;
+                }
+                long next = edge.getToNode().getId();
+                double weight = "time".equalsIgnoreCase(strategy) ? travelTime(edge) : safe(edge.getDistanceMeters());
+                double candidate = current.distance() + weight;
+                if (candidate < dist.getOrDefault(next, Double.MAX_VALUE)) {
+                    dist.put(next, candidate);
+                    prev.put(next, current.nodeId());
+                    pq.offer(new NodeDistance(next, candidate));
+                }
+            }
+        }
     }
 
     private List<Long> buildPath(Map<Long, Long> prev, Long fromId, Long toId) {
@@ -95,5 +106,8 @@ public class RoutePlanningService {
 
     private double safe(Double v) {
         return v == null ? 0.0 : v;
+    }
+
+    private record NodeDistance(Long nodeId, double distance) {
     }
 }

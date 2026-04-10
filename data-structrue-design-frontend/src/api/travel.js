@@ -21,3 +21,7 @@ export const createItinerary = (payload) => http.post('/itineraries', payload)
 
 // 路线规划接口。
 export const planRoute = (payload) => http.post('/routes/plan', payload)
+
+// 场所查询接口。
+export const listRoadNodes = () => http.get('/road-nodes')
+export const searchNearbyFacilities = (params) => http.get('/facilities/nearby', { params })

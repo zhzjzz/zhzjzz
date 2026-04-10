@@ -56,6 +56,29 @@ public interface DiaryRepository {
     })
     List<Diary> findByTitleContainingIgnoreCase(String title);
 
+    @Select("""
+            SELECT dr.id, dr.title, dr.content, dr.media_url, dr.media_type, dr.score, dr.views, dr.published_at, dr.destination_id,
+                   d.id AS destination_ref_id, d.name AS destination_name, d.scene_type AS destination_scene_type,
+                   d.category AS destination_category, d.heat AS destination_heat, d.rating AS destination_rating,
+                   d.description AS destination_description, d.latitude AS destination_latitude, d.longitude AS destination_longitude
+            FROM diary dr
+            LEFT JOIN destination d ON d.id = dr.destination_id
+            WHERE LOWER(dr.content) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+               OR LOWER(dr.title) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+            """)
+    @Results(id = "diaryFullTextFallbackResultMap", value = {
+            @Result(column = "destination_ref_id", property = "destination.id"),
+            @Result(column = "destination_name", property = "destination.name"),
+            @Result(column = "destination_scene_type", property = "destination.sceneType"),
+            @Result(column = "destination_category", property = "destination.category"),
+            @Result(column = "destination_heat", property = "destination.heat"),
+            @Result(column = "destination_rating", property = "destination.rating"),
+            @Result(column = "destination_description", property = "destination.description"),
+            @Result(column = "destination_latitude", property = "destination.latitude"),
+            @Result(column = "destination_longitude", property = "destination.longitude")
+    })
+    List<Diary> findByTitleOrContentContainingIgnoreCase(String keyword);
+
     @Insert("""
             INSERT INTO diary(title, content, media_url, media_type, score, views, published_at, destination_id)
             VALUES(#{title}, #{content}, #{mediaUrl}, #{mediaType}, #{score}, #{views}, #{publishedAt}, #{destination.id})

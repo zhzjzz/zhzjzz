@@ -2,16 +2,24 @@ spring:
   application:
     name: personalized-travel-system
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/travel_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:jdbc:h2:file:./data/travel-system;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;AUTO_SERVER=TRUE}
+    username: ${MYSQL_USERNAME:sa}
+    password: ${MYSQL_PASSWORD:}
+    driver-class-name: ${MYSQL_DRIVER:org.h2.Driver}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
   elasticsearch:
     uris: ${ES_URIS:http://localhost:9200}
+  data:
+    elasticsearch:
+      repositories:
+        enabled: ${ES_REPOSITORIES_ENABLED:false}
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

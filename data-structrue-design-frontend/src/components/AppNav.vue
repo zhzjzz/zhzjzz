@@ -12,6 +12,7 @@ const navItems = [
   { label: '总览', path: '/' },
   { label: '目的地推荐', path: '/destinations' },
   { label: '路线规划', path: '/routes' },
+  { label: '场所查询', path: '/facilities' },
   { label: '旅游日记', path: '/diaries' },
   { label: '协作行程', path: '/itineraries' },
 ]
