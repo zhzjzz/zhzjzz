@@ -1,35 +1,44 @@
-package com.travel.system.repository;
+package com.travel.system.mapper;
 
 import com.travel.system.model.Facility;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * 替代原来的 {@link FacilityRepository}，现已迁移至 MyBatis {@link com.travel.system.mapper.FacilityMapper}。
+ * MyBatis Mapper 接口，用于操作 {@link Facility} 实体。
  *
- * <p>此接口仅保留与业务层交互的最小方法签名，实际实现全部委托给 {@link com.travel.system.mapper.FacilityMapper}
- *，对应的 SQL 语句已抽离至 {@code resources/mapper/FacilityMapper.xml}。
+ * <p>复杂的 SQL 查询（联表查询、模糊匹配等）已迁移到对应的 XML 映射文件
+ * {@code resources/mapper/FacilityMapper.xml}，保持 Java 接口简洁。
+ *
+ * <p>主要功能：
+ *
+ * <ul>
+ *   <li>查询全部设施（联表目的地）；</li>
+ *   <li>按设施类型模糊搜索；</li>
+ *   <li>插入、更新设施记录。</li>
+ * </ul>
  *
  * @author 自动生成
  */
 @Mapper
-public interface FacilityRepository {
+public interface FacilityMapper {
 
     /**
-     * 查询全部设施（含关联目的地）。
+     * 查询全部设施，并左联目的地表获取关联信息。
      *
-     * @return {@link Facility} 列表
+     * @return {@link Facility} 列表（含关联的目的地信息）
      */
     List<Facility> findAll();
 
     /**
-     * 按设施类型进行模糊搜索（不区分大小写）。
+     * 根据设施类型进行模糊匹配（不区分大小写）。
      *
-     * @param type 关键字
+     * @param type 设施类型关键字
      * @return 匹配的 {@link Facility} 列表
      */
-    List<Facility> findByFacilityTypeContainingIgnoreCase(String type);
+    List<Facility> findByType(@Param("type") String type);
 
     /**
      * 插入新设施记录。

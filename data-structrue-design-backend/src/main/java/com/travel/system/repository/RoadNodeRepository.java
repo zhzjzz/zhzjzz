@@ -1,39 +1,32 @@
 package com.travel.system.repository;
 
 import com.travel.system.model.RoadNode;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
-
 import java.util.List;
 
+/**
+ * MyBatis Repository（Mapper）用于操作 {@link RoadNode} 实体。
+ *
+ * <p>提供道路节点的基本查询、单点获取、插入与更新方法，后续可在此基础上实现邻近搜索或路径计算等高级功能。
+ *
+ * @author 自动生成
+ */
 @Mapper
 public interface RoadNodeRepository {
-    @Select("""
-            SELECT id, name, node_type, latitude, longitude
-            FROM road_node
-            """)
+
+    /**
+     * 查询全部道路节点。
+     *
+     * @return {@link RoadNode} 列表
+     */
     List<RoadNode> findAll();
 
-    @Insert("""
-            INSERT INTO road_node(name, node_type, latitude, longitude)
-            VALUES(#{name}, #{nodeType}, #{latitude}, #{longitude})
-            """)
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-    int insert(RoadNode roadNode);
-
-    @Update("""
-            UPDATE road_node
-            SET name = #{name},
-                node_type = #{nodeType},
-                latitude = #{latitude},
-                longitude = #{longitude}
-            WHERE id = #{id}
-            """)
-    int update(RoadNode roadNode);
-
+    /**
+     * 保存道路节点（新增或更新）。
+     *
+     * @param roadNode 道路节点实体
+     * @return 保存后的实体
+     */
     default RoadNode save(RoadNode roadNode) {
         if (roadNode.getId() == null) {
             insert(roadNode);
@@ -42,4 +35,26 @@ public interface RoadNodeRepository {
         }
         return roadNode;
     }
+
+    /**
+     * 根据 ID 查询单个道路节点。
+     *
+     * @param id 主键
+     * @return 对应的 {@link RoadNode}，若不存在返回 {@code null}
+     */
+    RoadNode findById(Long id);
+
+    /**
+     * 插入新道路节点。
+     *
+     * @param roadNode 道路节点实体
+     */
+    void insert(RoadNode roadNode);
+
+    /**
+     * 更新已有道路节点。
+     *
+     * @param roadNode 道路节点实体
+     */
+    void update(RoadNode roadNode);
 }

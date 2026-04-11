@@ -30,5 +30,6 @@ spring:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
+  mapper-locations: classpath:mapper/*.xml
 server:
   port: ${SERVER_PORT:8080}

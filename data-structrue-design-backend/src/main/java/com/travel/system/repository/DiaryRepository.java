@@ -1,105 +1,76 @@
 package com.travel.system.repository;
 
 import com.travel.system.model.Diary;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
+/**
+ * MyBatis Repository（Mapper）用于操作 {@link Diary} 实体。
+ *
+ * <p>本接口提供最基础的 CRUD 方法；全文检索在 {@link com.travel.system.repository.DiarySearchRepository}
+ * 中实现，已使用 Elasticsearch（若未配置则回落到 JPA）。
+ *
+ * @author 自动生成
+ */
 @Mapper
 public interface DiaryRepository {
-    @Select("""
-            SELECT dr.id, dr.title, dr.content, dr.media_url, dr.media_type, dr.score, dr.views, dr.published_at, dr.destination_id,
-                   d.id AS destination_ref_id, d.name AS destination_name, d.scene_type AS destination_scene_type,
-                   d.category AS destination_category, d.heat AS destination_heat, d.rating AS destination_rating,
-                   d.description AS destination_description, d.latitude AS destination_latitude, d.longitude AS destination_longitude
-            FROM diary dr
-            LEFT JOIN destination d ON d.id = dr.destination_id
-            """)
-    @Results(id = "diaryResultMap", value = {
-            @Result(column = "destination_ref_id", property = "destination.id"),
-            @Result(column = "destination_name", property = "destination.name"),
-            @Result(column = "destination_scene_type", property = "destination.sceneType"),
-            @Result(column = "destination_category", property = "destination.category"),
-            @Result(column = "destination_heat", property = "destination.heat"),
-            @Result(column = "destination_rating", property = "destination.rating"),
-            @Result(column = "destination_description", property = "destination.description"),
-            @Result(column = "destination_latitude", property = "destination.latitude"),
-            @Result(column = "destination_longitude", property = "destination.longitude")
-    })
+
+    /**
+     * 查询全部日记。
+     *
+     * @return {@link Diary} 列表
+     */
+    /**
+     * 查询全部日记。
+     *
+     * @return {@link Diary} 列表
+     */
     List<Diary> findAll();
 
-    @Select("""
-            SELECT dr.id, dr.title, dr.content, dr.media_url, dr.media_type, dr.score, dr.views, dr.published_at, dr.destination_id,
-                   d.id AS destination_ref_id, d.name AS destination_name, d.scene_type AS destination_scene_type,
-                   d.category AS destination_category, d.heat AS destination_heat, d.rating AS destination_rating,
-                   d.description AS destination_description, d.latitude AS destination_latitude, d.longitude AS destination_longitude
-            FROM diary dr
-            LEFT JOIN destination d ON d.id = dr.destination_id
-            WHERE LOWER(dr.title) LIKE CONCAT('%', LOWER(#{title}), '%')
-            """)
-    @Results(id = "diarySearchResultMap", value = {
-            @Result(column = "destination_ref_id", property = "destination.id"),
-            @Result(column = "destination_name", property = "destination.name"),
-            @Result(column = "destination_scene_type", property = "destination.sceneType"),
-            @Result(column = "destination_category", property = "destination.category"),
-            @Result(column = "destination_heat", property = "destination.heat"),
-            @Result(column = "destination_rating", property = "destination.rating"),
-            @Result(column = "destination_description", property = "destination.description"),
-            @Result(column = "destination_latitude", property = "destination.latitude"),
-            @Result(column = "destination_longitude", property = "destination.longitude")
-    })
-    List<Diary> findByTitleContainingIgnoreCase(String title);
+    /**
+     * 按标题进行不区分大小写的模糊匹配。
+     *
+     * @param title 标题关键字
+     * @return 匹配的 {@link Diary} 列表
+     */
+    List<Diary> findByTitleContainingIgnoreCase(@Param("title") String title);
 
-    @Select("""
-            SELECT dr.id, dr.title, dr.content, dr.media_url, dr.media_type, dr.score, dr.views, dr.published_at, dr.destination_id,
-                   d.id AS destination_ref_id, d.name AS destination_name, d.scene_type AS destination_scene_type,
-                   d.category AS destination_category, d.heat AS destination_heat, d.rating AS destination_rating,
-                   d.description AS destination_description, d.latitude AS destination_latitude, d.longitude AS destination_longitude
-            FROM diary dr
-            LEFT JOIN destination d ON d.id = dr.destination_id
-            WHERE LOWER(dr.content) LIKE CONCAT('%', LOWER(#{keyword}), '%')
-               OR LOWER(dr.title) LIKE CONCAT('%', LOWER(#{keyword}), '%')
-            """)
-    @Results(id = "diaryFullTextFallbackResultMap", value = {
-            @Result(column = "destination_ref_id", property = "destination.id"),
-            @Result(column = "destination_name", property = "destination.name"),
-            @Result(column = "destination_scene_type", property = "destination.sceneType"),
-            @Result(column = "destination_category", property = "destination.category"),
-            @Result(column = "destination_heat", property = "destination.heat"),
-            @Result(column = "destination_rating", property = "destination.rating"),
-            @Result(column = "destination_description", property = "destination.description"),
-            @Result(column = "destination_latitude", property = "destination.latitude"),
-            @Result(column = "destination_longitude", property = "destination.longitude")
-    })
-    List<Diary> findByTitleOrContentContainingIgnoreCase(String keyword);
+    /**
+     * 按标题或内容进行不区分大小写的模糊匹配。
+     *
+     * @param keyword 关键字
+     * @return 匹配的 {@link Diary} 列表
+     */
+    List<Diary> findByTitleOrContentContainingIgnoreCase(@Param("keyword") String keyword);
 
-    @Insert("""
-            INSERT INTO diary(title, content, media_url, media_type, score, views, published_at, destination_id)
-            VALUES(#{title}, #{content}, #{mediaUrl}, #{mediaType}, #{score}, #{views}, #{publishedAt}, #{destination.id})
-            """)
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-    int insert(Diary diary);
+    /**
+     * 根据 ID 查询单条日记。
+     *
+     * @param id 主键
+     * @return 对应的 {@link Diary}，若不存在返回 {@code null}
+     */
+    Diary findById(Long id);
 
-    @Update("""
-            UPDATE diary
-            SET title = #{title},
-                content = #{content},
-                media_url = #{mediaUrl},
-                media_type = #{mediaType},
-                score = #{score},
-                views = #{views},
-                published_at = #{publishedAt},
-                destination_id = #{destination.id}
-            WHERE id = #{id}
-            """)
-    int update(Diary diary);
+    /**
+     * 插入新日记记录。
+     *
+     * @param diary 日记实体
+     */
+    void insert(Diary diary);
 
+    /**
+     * 更新已有日记记录。
+     *
+     * @param diary 日记实体
+     */
+    void update(Diary diary);
+    /**
+     * 保存日记（新增或更新）。
+     *
+     * @param diary 日记实体
+     * @return 保存后的实体
+     */
     default Diary save(Diary diary) {
         if (diary.getId() == null) {
             insert(diary);

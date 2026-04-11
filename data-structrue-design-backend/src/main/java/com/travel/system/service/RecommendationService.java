@@ -9,14 +9,29 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 /**
- * 推荐服务。
- * 使用小顶堆实现 Top-K 非完全排序，避免对全量数据进行完整排序。
+ * {@code RecommendationService} 提供基于热度与评分的 Top‑K 推荐算法。
+ *
+ * <p>实现思路：
+ *
+ * <ul>
+ *   <li>使用小顶堆（{@link PriorityQueue}）维护当前最好的 {@code k} 条记录，避免对全量数据进行完整排序；</li>
+ *   <li>为目的地和美食分别定义不同的综合评分函数 {@link #destinationScore(Destination)} 与 {@link #foodScore(Food)}，兼顾热度、评分以及（对美食）距离因素；</li>
+ *   <li>最终将堆中的元素转为列表并按照评分降序返回。</li>
+ * </ul>
+ *
+ * <p>该实现是演示性质，实际项目可根据业务需求引入更复杂的机器学习或协同过滤模型。
+ *
+ * @author 自动生成
  */
 @Service
 public class RecommendationService {
 
     /**
-     * 目的地 Top-K 推荐。
+     * 返回目的地的 Top‑K 推荐列表。
+     *
+     * @param data 待排序的目的地集合
+     * @param k    需要返回的记录数
+     * @return 按综合评分降序排列的 {@link Destination} 列表
      */
     public List<Destination> topKDestinations(List<Destination> data, int k) {
         PriorityQueue<Destination> heap = new PriorityQueue<>(Comparator.comparingDouble(this::destinationScore));
@@ -26,11 +41,17 @@ public class RecommendationService {
                 heap.poll();
             }
         }
-        return heap.stream().sorted((a, b) -> Double.compare(destinationScore(b), destinationScore(a))).toList();
+        return heap.stream()
+                .sorted((a, b) -> Double.compare(destinationScore(b), destinationScore(a)))
+                .toList();
     }
 
     /**
-     * 美食 Top-K 推荐。
+     * 返回美食的 Top‑K 推荐列表。
+     *
+     * @param data 待排序的美食集合
+     * @param k    需要返回的记录数
+     * @return 按综合评分降序排列的 {@link Food} 列表
      */
     public List<Food> topKFood(List<Food> data, int k) {
         PriorityQueue<Food> heap = new PriorityQueue<>(Comparator.comparingDouble(this::foodScore));
@@ -40,26 +61,38 @@ public class RecommendationService {
                 heap.poll();
             }
         }
-        return heap.stream().sorted((a, b) -> Double.compare(foodScore(b), foodScore(a))).toList();
+        return heap.stream()
+                .sorted((a, b) -> Double.compare(foodScore(b), foodScore(a)))
+                .toList();
     }
 
     /**
-     * 目的地综合评分：热度权重 0.6，评分权重 0.4。
+     * 目的地综合评分：热度占比 0.6，评分占比 0.4。
+     *
+     * @param d 目的地实体
+     * @return 计算后的分数，范围 0~∞
      */
     private double destinationScore(Destination d) {
         return safe(d.getHeat()) * 0.6 + safe(d.getRating()) * 0.4;
     }
 
     /**
-     * 美食综合评分：热度/评分为主，距离为辅（距离越近加分越高）。
+     * 美食综合评分：热度 45% + 评分 45% + 距离 10%（距离越近得分越高）。
+     *
+     * @param f 美食实体
+     * @return 计算后的分数
      */
     private double foodScore(Food f) {
         double distance = f.getDistanceMeters() == null ? 1000.0 : f.getDistanceMeters();
-        return safe(f.getHeat()) * 0.45 + safe(f.getRating()) * 0.45 + Math.max(0, (1000 - distance) / 1000) * 0.1;
+        return safe(f.getHeat()) * 0.45 + safe(f.getRating()) * 0.45
+                + Math.max(0, (1000 - distance) / 1000) * 0.1;
     }
 
     /**
-     * 空值兜底，防止评分字段为空导致 NPE。
+     * 防止 {@code null} 值导致 NPE 的工具方法。
+     *
+     * @param v 可能为 {@code null} 的 {@link Double}
+     * @return 若为 {@code null} 则返回 0，否则返回原值
      */
     private double safe(Double v) {
         return v == null ? 0 : v;

@@ -1,84 +1,57 @@
 package com.travel.system.repository;
 
 import com.travel.system.model.Food;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
+/**
+ * 替代原来的 {@link FoodRepository}，已迁移至 MyBatis {@link com.travel.system.mapper.FoodMapper}。
+ *
+ * <p>此接口仅保留业务层需要的方法签名，实际实现全部委托给 {@link com.travel.system.mapper.FoodMapper}，对应的
+ * SQL 已抽离至 {@code resources/mapper/FoodMapper.xml}。
+ *
+ * @author 自动生成
+ */
 @Mapper
 public interface FoodRepository {
-    @Select("""
-            SELECT f.id, f.name, f.cuisine, f.store_name, f.heat, f.rating, f.distance_meters, f.destination_id,
-                   d.id AS destination_ref_id, d.name AS destination_name, d.scene_type AS destination_scene_type,
-                   d.category AS destination_category, d.heat AS destination_heat, d.rating AS destination_rating,
-                   d.description AS destination_description, d.latitude AS destination_latitude, d.longitude AS destination_longitude
-            FROM food f
-            LEFT JOIN destination d ON d.id = f.destination_id
-            """)
-    @Results(id = "foodResultMap", value = {
-            @Result(column = "destination_ref_id", property = "destination.id"),
-            @Result(column = "destination_name", property = "destination.name"),
-            @Result(column = "destination_scene_type", property = "destination.sceneType"),
-            @Result(column = "destination_category", property = "destination.category"),
-            @Result(column = "destination_heat", property = "destination.heat"),
-            @Result(column = "destination_rating", property = "destination.rating"),
-            @Result(column = "destination_description", property = "destination.description"),
-            @Result(column = "destination_latitude", property = "destination.latitude"),
-            @Result(column = "destination_longitude", property = "destination.longitude")
-    })
+
+    /**
+     * 查询全部美食（含关联目的地）。
+     *
+     * @return {@link Food} 列表
+     */
     List<Food> findAll();
 
-    @Select("""
-            SELECT f.id, f.name, f.cuisine, f.store_name, f.heat, f.rating, f.distance_meters, f.destination_id,
-                   d.id AS destination_ref_id, d.name AS destination_name, d.scene_type AS destination_scene_type,
-                   d.category AS destination_category, d.heat AS destination_heat, d.rating AS destination_rating,
-                   d.description AS destination_description, d.latitude AS destination_latitude, d.longitude AS destination_longitude
-            FROM food f
-            LEFT JOIN destination d ON d.id = f.destination_id
-            WHERE LOWER(f.name) LIKE CONCAT('%', LOWER(#{name}), '%')
-               OR LOWER(f.cuisine) LIKE CONCAT('%', LOWER(#{cuisine}), '%')
-               OR LOWER(f.store_name) LIKE CONCAT('%', LOWER(#{storeName}), '%')
-            """)
-    @Results(id = "foodSearchResultMap", value = {
-            @Result(column = "destination_ref_id", property = "destination.id"),
-            @Result(column = "destination_name", property = "destination.name"),
-            @Result(column = "destination_scene_type", property = "destination.sceneType"),
-            @Result(column = "destination_category", property = "destination.category"),
-            @Result(column = "destination_heat", property = "destination.heat"),
-            @Result(column = "destination_rating", property = "destination.rating"),
-            @Result(column = "destination_description", property = "destination.description"),
-            @Result(column = "destination_latitude", property = "destination.latitude"),
-            @Result(column = "destination_longitude", property = "destination.longitude")
-    })
-    List<Food> findByNameContainingIgnoreCaseOrCuisineContainingIgnoreCaseOrStoreNameContainingIgnoreCase(
-            String name, String cuisine, String storeName);
+    /**
+     * 按名称、菜系或店名进行模糊搜索（不区分大小写）。
+     * 方法名已简化，映射到 FoodMapper.findByKeyword。
+     *
+     * @param keyword 关键字
+     * @return 匹配的 {@link Food} 列表
+     */
+    List<Food> findByKeyword(String keyword);
 
-    @Insert("""
-            INSERT INTO food(name, cuisine, store_name, heat, rating, distance_meters, destination_id)
-            VALUES(#{name}, #{cuisine}, #{storeName}, #{heat}, #{rating}, #{distanceMeters}, #{destination.id})
-            """)
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-    int insert(Food food);
+    /**
+     * 插入新美食记录。
+     *
+     * @param food 美食实体
+     */
+    void insert(Food food);
 
-    @Update("""
-            UPDATE food
-            SET name = #{name},
-                cuisine = #{cuisine},
-                store_name = #{storeName},
-                heat = #{heat},
-                rating = #{rating},
-                distance_meters = #{distanceMeters},
-                destination_id = #{destination.id}
-            WHERE id = #{id}
-            """)
-    int update(Food food);
+    /**
+     * 更新已有美食记录。
+     *
+     * @param food 美食实体
+     */
+    void update(Food food);
 
+    /**
+     * 保存美食（新增或更新）。
+     *
+     * @param food 美食实体
+     * @return 保存后的实体
+     */
     default Food save(Food food) {
         if (food.getId() == null) {
             insert(food);

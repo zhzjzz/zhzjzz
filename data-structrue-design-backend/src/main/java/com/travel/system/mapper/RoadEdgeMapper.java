@@ -1,21 +1,21 @@
-package com.travel.system.repository;
+package com.travel.system.mapper;
 
 import com.travel.system.model.RoadEdge;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * MyBatis Repository（Mapper）用于操作 {@link RoadEdge} 实体。
+ * MyBatis Mapper 接口，用于操作 {@link RoadEdge} 实体。
  *
- * <p>本接口仅保留业务层需要的方法签名，实际实现全部委托给
- * {@link com.travel.system.mapper.RoadEdgeMapper}，对应的 SQL 已抽离至
- * {@code resources/mapper/RoadEdgeMapper.xml}。
+ * <p>复杂的联表查询 SQL 已迁移至 XML 映射文件 {@code resources/mapper/RoadEdgeMapper.xml}，
+ * 保持 Java 接口简洁清晰。
  *
  * <p>主要功能：
  *
  * <ul>
- *   <li>查询全部道路边（含起点、终点节点信息）；</li>
+ *   <li>查询全部道路边（联表起点、终点节点）；</li>
  *   <li>按起点节点查询出边；</li>
  *   <li>插入、更新道路边记录。</li>
  * </ul>
@@ -23,12 +23,12 @@ import java.util.List;
  * @author 自动生成
  */
 @Mapper
-public interface RoadEdgeRepository {
+public interface RoadEdgeMapper {
 
     /**
-     * 查询全部道路边（联表起点、终点节点）。
+     * 查询全部道路边，并左联起点和终点节点获取完整信息。
      *
-     * @return {@link RoadEdge} 列表
+     * @return {@link RoadEdge} 列表（含关联的 fromNode 与 toNode）
      */
     List<RoadEdge> findAll();
 
@@ -38,7 +38,7 @@ public interface RoadEdgeRepository {
      * @param fromNodeId 起点节点 ID
      * @return 从该节点出发的所有 {@link RoadEdge}
      */
-    List<RoadEdge> findByFromNodeId(Long fromNodeId);
+    List<RoadEdge> findByFromNodeId(@Param("fromNodeId") Long fromNodeId);
 
     /**
      * 插入新道路边记录。

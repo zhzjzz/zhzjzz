@@ -8,20 +8,39 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 协作行程控制器。
- * 对外提供行程创建与查询接口，支撑多人协作规划场景。
+ * {@code ItineraryController} 负责处理多人协作行程（Itinerary）相关的 HTTP 请求。
+ *
+ * <p>提供两套基本接口：
+ *
+ * <ul>
+ *   <li>查询全部行程；</li>
+ *   <li>创建新行程并自动写入 {@code updatedAt} 时间戳，便于后续协作场景的同步与冲突检测。</li>
+ * </ul>
+ *
+ * <p>后续可扩展为支持按用户查询、行程分享、实时协作编辑等高级功能。
+ *
+ * @author 自动生成
  */
 @RestController
 @RequestMapping("/api/itineraries")
 public class ItineraryController {
+
+    /** 行程数据的 JPA 持久层仓库。 */
     private final ItineraryRepository itineraryRepository;
 
+    /**
+     * 构造函数注入 {@link ItineraryRepository}。
+     *
+     * @param itineraryRepository 行程持久化接口
+     */
     public ItineraryController(ItineraryRepository itineraryRepository) {
         this.itineraryRepository = itineraryRepository;
     }
 
     /**
      * 查询全部行程。
+     *
+     * @return 系统中已有的所有 {@link Itinerary}
      */
     @GetMapping
     public List<Itinerary> list() {
@@ -29,10 +48,17 @@ public class ItineraryController {
     }
 
     /**
-     * 创建行程，并在服务端写入更新时间，便于后续协作同步。
+     * 创建新行程并自动打上更新时间戳。
+     *
+     * <p>协作场景下，客户端可通过比对 {@code updatedAt} 判断数据是否过期，
+     * 从而实现乐观锁或增量同步。
+     *
+     * @param itinerary 前端提交的行程实体（JSON → {@link Itinerary}）
+     * @return 保存后的实体，其中 {@code updatedAt} 已设置为当前时间
      */
     @PostMapping
     public Itinerary create(@RequestBody Itinerary itinerary) {
+        // 为协作场景记录最新更新时间，便于后续同步
         itinerary.setUpdatedAt(LocalDateTime.now());
         return itineraryRepository.save(itinerary);
     }
