@@ -5,6 +5,9 @@ import com.travel.system.model.RoadEdge;
 import com.travel.system.model.RoadNode;
 import com.travel.system.mapper.RoadEdgeMapper;
 import com.travel.system.mapper.RoadNodeMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +31,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/road-nodes")
+@Tag(name = "道路网络", description = "道路节点查询、道路图结构获取等相关接口")
 public class RoadNodeController {
 
     /** 道路节点持久层仓库。 */
@@ -53,6 +57,8 @@ public RoadNodeController(RoadNodeMapper roadNodeRepository,
      *
      * @return 所有 {@link RoadNode} 实体列表
      */
+    @Operation(summary = "查询全部道路节点", description = "获取所有道路节点的详细列表")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping
     public List<RoadNode> list() {
         return roadNodeRepository.findAll();
@@ -72,6 +78,8 @@ public RoadNodeController(RoadNodeMapper roadNodeRepository,
      *
      * @return 包含节点与边的道路图响应对象
      */
+    @Operation(summary = "获取道路图结构", description = "获取完整的道路图（节点和边），用于前端可视化或路径规划")
+    @ApiResponse(responseCode = "200", description = "获取成功")
     @GetMapping("/graph")
     public RoadGraphResponse graph() {
         // 将数据库中的 RoadNode 实体转换为前端所需的简化节点结构

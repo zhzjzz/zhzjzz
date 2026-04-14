@@ -2,6 +2,10 @@ package com.travel.system.controller;
 
 import com.travel.system.model.Itinerary;
 import com.travel.system.mapper.ItineraryMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +27,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/itineraries")
+@Tag(name = "行程管理", description = "行程查询、创建等相关接口")
 public class ItineraryController {
 
     /** 行程数据的 JPA 持久层仓库。 */
@@ -42,6 +47,8 @@ public ItineraryController(ItineraryMapper itineraryRepository) {
      *
      * @return 系统中已有的所有 {@link Itinerary}
      */
+    @Operation(summary = "查询全部行程", description = "获取系统中所有行程列表")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping
     public List<Itinerary> list() {
         return itineraryRepository.findAll();
@@ -56,6 +63,11 @@ public ItineraryController(ItineraryMapper itineraryRepository) {
      * @param itinerary 前端提交的行程实体（JSON → {@link Itinerary}）
      * @return 保存后的实体，其中 {@code updatedAt} 已设置为当前时间
      */
+    @Operation(summary = "创建行程", description = "创建新行程并自动设置更新时间戳")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误")
+    })
     @PostMapping
     public Itinerary create(@RequestBody Itinerary itinerary) {
         // 为协作场景记录最新更新时间，便于后续同步

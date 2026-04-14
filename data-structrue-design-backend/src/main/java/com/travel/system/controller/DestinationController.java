@@ -3,6 +3,11 @@ package com.travel.system.controller;
 import com.travel.system.model.Destination;
 import com.travel.system.mapper.DestinationRepository;
 import com.travel.system.service.RecommendationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +30,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/destinations")
+@Tag(name = "目的地管理", description = "目的地查询、推荐、新增等相关接口")
 public class DestinationController {
 
     /** 持久化目的地的 JPA 仓库。 */
@@ -51,8 +57,11 @@ public class DestinationController {
      * @param keyword 可选的搜索关键字；若为 {@code null} 或空字符串，则返回全部目的地
      * @return 符合条件的 {@link Destination} 列表
      */
+    @Operation(summary = "查询目的地列表", description = "支持关键字模糊搜索，无关键字则返回所有目的地")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping
-    public List<Destination> list(@RequestParam(required = false) String keyword) {
+    public List<Destination> list(
+            @Parameter(description = "搜索关键字，用于模糊匹配名称或类别") @RequestParam(required = false) String keyword) {
         if (keyword == null || keyword.isBlank()) {
             // 没有提供关键字，返回全部记录
             return destinationRepository.findAll();
@@ -67,8 +76,11 @@ public class DestinationController {
      * @param k 想要返回的目的地数量，默认值为 10
      * @return 已排序的 {@link Destination} 列表
      */
+    @Operation(summary = "热门目的地推荐", description = "根据热度和评分综合排序返回Top-K目的地")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/top")
-    public List<Destination> top(@RequestParam(defaultValue = "10") int k) {
+    public List<Destination> top(
+            @Parameter(description = "返回数量，默认为10") @RequestParam(defaultValue = "10") int k) {
         // 先获取全部目的地，再交由推荐服务进行排序与截取
         return recommendationService.topKDestinations(destinationRepository.findAll(), k);
     }
@@ -79,6 +91,11 @@ public class DestinationController {
      * @param destination 前端提交的目的地实体（JSON → {@link Destination}）
      * @return 保存后的实体，包含数据库生成的主键等信息
      */
+    @Operation(summary = "新增目的地", description = "创建新的目的地记录并持久化到数据库")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误")
+    })
     @PostMapping
     public Destination create(@RequestBody Destination destination) {
         // 直接使用 JPA 仓库的 save 方法完成持久化

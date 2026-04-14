@@ -3,6 +3,10 @@ package com.travel.system.controller;
 import com.travel.system.dto.RoutePlanRequest;
 import com.travel.system.dto.RoutePlanResponse;
 import com.travel.system.service.RoutePlanningService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -39,6 +43,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
  */
 @RestController
 @RequestMapping("/api/routes")
+@Tag(name = "路线规划", description = "路径规划、多目标路线优化等相关接口")
 public class RouteController {
 
     /** 路径规划业务层服务，封装 Dijkstra 等算法的具体实现。 */
@@ -69,6 +74,11 @@ public class RouteController {
      * @return 规划结果 {@link RoutePlanResponse}，包含路径节点列表与总距离/时间
      * @throws ResponseStatusException 若参数不满足规划前提条件，返回 400 错误
      */
+    @Operation(summary = "路线规划", description = "支持单目标最短路径和多目标路线优化，支持距离/时间策略和多种交通方式")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "规划成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数不合法")
+    })
     @PostMapping("/plan")
     public RoutePlanResponse plan(@RequestBody RoutePlanRequest request) {
         // 设置默认策略与交通方式，避免空指针

@@ -4,6 +4,10 @@ import com.travel.system.dto.FacilityQueryResult;
 import com.travel.system.model.Facility;
 import com.travel.system.mapper.FacilityMapper;
 import com.travel.system.service.FacilitySearchService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/facilities")
+@Tag(name = "设施管理", description = "设施查询、附近搜索等相关接口")
 public class FacilityController {
 
 /** {@link FacilityMapper} 持久层接口 */
@@ -51,8 +56,11 @@ public FacilityController(FacilityMapper facilityRepository,
      * @param type 可选的设施类型关键字；若为 {@code null} 或空字符串，则返回全部设施
      * @return 符合条件的 {@link Facility} 列表
      */
+    @Operation(summary = "查询设施列表", description = "支持设施类型模糊搜索，无关键字则返回所有设施")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping
-    public List<Facility> list(@RequestParam(required = false) String type) {
+    public List<Facility> list(
+            @Parameter(description = "设施类型关键字，用于模糊匹配") @RequestParam(required = false) String type) {
         if (type == null || type.isBlank()) {
             // 未指定类型，返回所有设施记录
             return facilityRepository.findAll();
@@ -74,12 +82,15 @@ public FacilityController(FacilityMapper facilityRepository,
      * @param transport          交通方式，支持 {@code walk}、{@code bike}、{@code drive}，默认 {@code walk}
      * @return 按距离排序的 {@link FacilityQueryResult} 列表
      */
+    @Operation(summary = "附近设施搜索", description = "从指定道路节点出发，按交通方式搜索附近设施并排序")
+    @ApiResponse(responseCode = "200", description = "搜索成功")
     @GetMapping("/nearby")
-    public List<FacilityQueryResult> nearby(@RequestParam Long fromNodeId,
-                                            @RequestParam(required = false) String type,
-                                            @RequestParam(required = false) String keyword,
-                                            @RequestParam(required = false) Double maxDistanceMeters,
-                                            @RequestParam(defaultValue = "walk") String transport) {
+    public List<FacilityQueryResult> nearby(
+            @Parameter(description = "起始道路节点ID") @RequestParam Long fromNodeId,
+            @Parameter(description = "设施类型过滤") @RequestParam(required = false) String type,
+            @Parameter(description = "名称或描述关键字过滤") @RequestParam(required = false) String keyword,
+            @Parameter(description = "最大搜索距离（米）") @RequestParam(required = false) Double maxDistanceMeters,
+            @Parameter(description = "交通方式：walk/bike/drive，默认walk") @RequestParam(defaultValue = "walk") String transport) {
         // 委托 FacilitySearchService 执行基于图遍历的空间查询
         return facilitySearchService.searchNearby(fromNodeId, type, keyword, maxDistanceMeters, transport);
     }

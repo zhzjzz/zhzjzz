@@ -3,6 +3,10 @@ package com.travel.system.controller;
 import com.travel.system.model.Food;
 import com.travel.system.mapper.FoodMapper;
 import com.travel.system.service.RecommendationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +27,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/foods")
+@Tag(name = "美食管理", description = "美食查询、推荐等相关接口")
 public class FoodController {
 
     /** 美食数据的 JPA 持久层仓库。 */
@@ -49,8 +54,11 @@ public FoodController(FoodMapper foodRepository,
      * @param keyword 可选的搜索关键字；若为 {@code null} 或空字符串，则返回全部美食
      * @return 匹配的 {@link Food} 列表
      */
+    @Operation(summary = "搜索美食", description = "支持名称、菜系、店名关键字模糊搜索")
+    @ApiResponse(responseCode = "200", description = "搜索成功")
     @GetMapping
-    public List<Food> search(@RequestParam(required = false) String keyword) {
+    public List<Food> search(
+            @Parameter(description = "搜索关键字") @RequestParam(required = false) String keyword) {
         if (keyword == null || keyword.isBlank()) {
             // 未提供关键字，返回所有记录
             return foodRepository.findAll();
@@ -66,8 +74,11 @@ public FoodController(FoodMapper foodRepository,
      * @param k 想要返回的美食数量，默认 10
      * @return 已排序的 {@link Food} 列表
      */
+    @Operation(summary = "热门美食推荐", description = "根据热度和评分综合排序返回Top-K美食")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/top")
-    public List<Food> top(@RequestParam(defaultValue = "10") int k) {
+    public List<Food> top(
+            @Parameter(description = "返回数量，默认为10") @RequestParam(defaultValue = "10") int k) {
         // 先读取所有美食，再交由推荐服务完成排序截取
         return recommendationService.topKFood(foodRepository.findAll(), k);
     }

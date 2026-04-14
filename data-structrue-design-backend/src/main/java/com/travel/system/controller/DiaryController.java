@@ -4,6 +4,11 @@ import com.travel.system.model.Diary;
 import com.travel.system.mapper.DiaryMapper;
 import com.travel.system.search.DiaryDocument;
 import com.travel.system.service.DiaryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +30,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/diaries")
+@Tag(name = "旅游日记", description = "日记查询、创建、全文搜索等相关接口")
 public class DiaryController {
 
     /** 日记数据持久层仓库。 */
@@ -50,8 +56,11 @@ public DiaryController(DiaryMapper diaryRepository, DiaryService diaryService) {
      * @param title 可选的标题关键字；若为 {@code null} 或空字符串，则返回全部日记
      * @return 符合条件的 {@link Diary} 列表
      */
+    @Operation(summary = "查询日记列表", description = "支持标题关键字模糊搜索，无关键字则返回所有日记")
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping
-    public List<Diary> list(@RequestParam(required = false) String title) {
+    public List<Diary> list(
+            @Parameter(description = "标题关键字，用于模糊匹配") @RequestParam(required = false) String title) {
         if (title == null || title.isBlank()) {
             // 未指定关键字，返回所有日记记录
             return diaryRepository.findAll();
@@ -66,6 +75,11 @@ public DiaryController(DiaryMapper diaryRepository, DiaryService diaryService) {
      * @param diary 前端提交的日记实体
      * @return 保存后的日记实体
      */
+    @Operation(summary = "创建日记", description = "新增日记并同步写入Elasticsearch索引")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误")
+    })
     @PostMapping
     public Diary create(@RequestBody Diary diary) {
         // 通过 DiaryService 确保同时写入数据库与索引
@@ -80,8 +94,11 @@ public DiaryController(DiaryMapper diaryRepository, DiaryService diaryService) {
      * @param keyword 检索关键字
      * @return 匹配的 {@link DiaryDocument} 列表
      */
+    @Operation(summary = "日记全文搜索", description = "基于Elasticsearch对日记标题和内容进行全文检索")
+    @ApiResponse(responseCode = "200", description = "搜索成功")
     @GetMapping("/search")
-    public List<DiaryDocument> search(@RequestParam String keyword) {
+    public List<DiaryDocument> search(
+            @Parameter(description = "搜索关键字，支持分词查询") @RequestParam String keyword) {
         return diaryService.fullTextSearch(keyword);
     }
 }
