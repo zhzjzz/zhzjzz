@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
@@ -31,7 +32,7 @@ public class OsmRouteService {
     public OsmRouteResponse route(double startLat, double startLon, double endLat, double endLon) {
         if (graphHopper == null) {
             throw new ResponseStatusException(SERVICE_UNAVAILABLE,
-                    "GraphHopper 未启用，请设置 GRAPHHOPPER_ENABLED=true 并提供 OSM 数据文件");
+                    "GraphHopper 未启用，请设置 GRAPHHOPPER_ENABLED=true 并配置 GRAPHHOPPER_OSM_FILE");
         }
 
         GHRequest request = new GHRequest(startLat, startLon, endLat, endLon)
@@ -39,7 +40,10 @@ public class OsmRouteService {
                 .setLocale(Locale.CHINA);
         GHResponse response = graphHopper.route(request);
         if (response.hasErrors()) {
-            throw new ResponseStatusException(BAD_REQUEST, "导航失败: " + response.getErrors());
+            String details = response.getErrors().stream()
+                    .map(Throwable::getMessage)
+                    .collect(Collectors.joining("; "));
+            throw new ResponseStatusException(BAD_REQUEST, "导航失败: " + details);
         }
 
         ResponsePath best = response.getBest();

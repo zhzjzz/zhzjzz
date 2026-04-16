@@ -8,6 +8,7 @@ public class GraphHopperProperties {
     private String osmFile;
     private String graphLocation;
     private String profile;
+    private String vehicle;
 
     public boolean isEnabled() {
         return enabled;
@@ -39,5 +40,13 @@ public class GraphHopperProperties {
 
     public void setProfile(String profile) {
         this.profile = profile;
+    }
+
+    public String getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(String vehicle) {
+        this.vehicle = vehicle;
     }
 }

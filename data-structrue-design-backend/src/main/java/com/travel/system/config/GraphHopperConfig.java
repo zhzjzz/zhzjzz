@@ -18,7 +18,7 @@ public class GraphHopperConfig {
         GraphHopper hopper = new GraphHopper();
         hopper.setOSMFile(properties.getOsmFile());
         hopper.setGraphHopperLocation(properties.getGraphLocation());
-        hopper.setProfiles(new Profile(properties.getProfile()).setVehicle("car").setWeighting("fastest"));
+        hopper.setProfiles(new Profile(properties.getProfile()).setVehicle(properties.getVehicle()).setWeighting("fastest"));
         hopper.getCHPreparationHandler().setCHProfiles(new CHProfile(properties.getProfile()));
         hopper.importOrLoad();
         return hopper;

@@ -5,6 +5,9 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getOsmRoute, listDestinations } from '../api/travel'
 
+const CHINA_CENTER = [35.8617, 104.1954]
+const DEFAULT_ZOOM = 4
+
 const mapInstance = ref(null)
 const routeLayer = ref(null)
 const markerLayer = ref(null)
@@ -29,10 +32,10 @@ const selectedEnd = computed(() =>
 )
 
 const distanceKm = computed(() => ((routeResult.value?.distance || 0) / 1000).toFixed(2))
-const durationHour = computed(() => ((routeResult.value?.time || 0) / 1000 / 3600).toFixed(2))
+const durationHours = computed(() => ((routeResult.value?.time || 0) / 1000 / 3600).toFixed(2))
 
 const initMap = () => {
-  mapInstance.value = L.map('route-map').setView([35.8617, 104.1954], 4)
+  mapInstance.value = L.map('route-map').setView(CHINA_CENTER, DEFAULT_ZOOM)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(mapInstance.value)
@@ -89,7 +92,10 @@ const loadDestinations = async () => {
 
 const onStartChange = () => {
   if (form.value.startId === form.value.endId) {
-    form.value.endId = selectableEndDestinations.value[0]?.id || null
+    const nextEndId = selectableEndDestinations.value[0]?.id || null
+    if (nextEndId !== form.value.endId) {
+      form.value.endId = nextEndId
+    }
   }
   drawMarkers()
 }
@@ -196,7 +202,7 @@ onBeforeUnmount(() => {
 
       <el-descriptions v-if="routeResult" :column="2" border>
         <el-descriptions-item label="总距离">{{ distanceKm }} km</el-descriptions-item>
-        <el-descriptions-item label="预计耗时">{{ durationHour }} h</el-descriptions-item>
+        <el-descriptions-item label="预计耗时">{{ durationHours }} h</el-descriptions-item>
       </el-descriptions>
       <el-empty v-else description="请选择起终点并点击规划路线" />
 

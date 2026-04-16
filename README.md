@@ -27,6 +27,7 @@ mvn spring-boot:run
 - `GRAPHHOPPER_OSM_FILE`（默认 `data/osm/china-latest.osm.pbf`）
 - `GRAPHHOPPER_GRAPH_LOCATION`（默认 `data/graph-cache`）
 - `GRAPHHOPPER_PROFILE`（默认 `car`）
+- `GRAPHHOPPER_VEHICLE`（默认 `car`）
 
 默认地址：`http://localhost:8080`
 

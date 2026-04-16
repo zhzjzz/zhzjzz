@@ -88,6 +88,7 @@
         <dependency>
             <groupId>com.graphhopper</groupId>
             <artifactId>graphhopper-core</artifactId>
+            <!-- 8.0 与当前 Spring Boot 3 / Java 17 组合兼容稳定 -->
             <version>8.0</version>
         </dependency>
 
