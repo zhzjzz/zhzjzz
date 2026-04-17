@@ -20,8 +20,6 @@ public class ElasticsearchFullSyncService {
     private final FacilityMapper facilityMapper;
     private final FoodMapper foodMapper;
     private final ItineraryMapper itineraryMapper;
-    private final RoadNodeMapper roadNodeMapper;
-    private final RoadEdgeMapper roadEdgeMapper;
     private final UserAccountMapper userAccountMapper;
 
     private final DestinationSearchRepository destinationSearchRepository;
@@ -29,8 +27,6 @@ public class ElasticsearchFullSyncService {
     private final FacilitySearchRepository facilitySearchRepository;
     private final FoodSearchRepository foodSearchRepository;
     private final ItinerarySearchRepository itinerarySearchRepository;
-    private final RoadNodeSearchRepository roadNodeSearchRepository;
-    private final RoadEdgeSearchRepository roadEdgeSearchRepository;
     private final UserAccountSearchRepository userAccountSearchRepository;
 
     public ElasticsearchFullSyncService(DestinationMapper destinationMapper,
@@ -38,32 +34,24 @@ public class ElasticsearchFullSyncService {
                                         FacilityMapper facilityMapper,
                                         FoodMapper foodMapper,
                                         ItineraryMapper itineraryMapper,
-                                        RoadNodeMapper roadNodeMapper,
-                                        RoadEdgeMapper roadEdgeMapper,
                                         UserAccountMapper userAccountMapper,
                                         ObjectProvider<DestinationSearchRepository> destinationSearchRepositoryProvider,
                                         ObjectProvider<DiarySearchRepository> diarySearchRepositoryProvider,
                                         ObjectProvider<FacilitySearchRepository> facilitySearchRepositoryProvider,
                                         ObjectProvider<FoodSearchRepository> foodSearchRepositoryProvider,
                                         ObjectProvider<ItinerarySearchRepository> itinerarySearchRepositoryProvider,
-                                        ObjectProvider<RoadNodeSearchRepository> roadNodeSearchRepositoryProvider,
-                                        ObjectProvider<RoadEdgeSearchRepository> roadEdgeSearchRepositoryProvider,
                                         ObjectProvider<UserAccountSearchRepository> userAccountSearchRepositoryProvider) {
         this.destinationMapper = destinationMapper;
         this.diaryMapper = diaryMapper;
         this.facilityMapper = facilityMapper;
         this.foodMapper = foodMapper;
         this.itineraryMapper = itineraryMapper;
-        this.roadNodeMapper = roadNodeMapper;
-        this.roadEdgeMapper = roadEdgeMapper;
         this.userAccountMapper = userAccountMapper;
         this.destinationSearchRepository = destinationSearchRepositoryProvider.getIfAvailable();
         this.diarySearchRepository = diarySearchRepositoryProvider.getIfAvailable();
         this.facilitySearchRepository = facilitySearchRepositoryProvider.getIfAvailable();
         this.foodSearchRepository = foodSearchRepositoryProvider.getIfAvailable();
         this.itinerarySearchRepository = itinerarySearchRepositoryProvider.getIfAvailable();
-        this.roadNodeSearchRepository = roadNodeSearchRepositoryProvider.getIfAvailable();
-        this.roadEdgeSearchRepository = roadEdgeSearchRepositoryProvider.getIfAvailable();
         this.userAccountSearchRepository = userAccountSearchRepositoryProvider.getIfAvailable();
     }
 
@@ -74,8 +62,6 @@ public class ElasticsearchFullSyncService {
         result.put("facility", syncFacilities());
         result.put("food", syncFoods());
         result.put("itinerary", syncItineraries());
-        result.put("road_node", syncRoadNodes());
-        result.put("road_edge", syncRoadEdges());
         result.put("user_account", syncUserAccounts());
         return result;
     }
@@ -127,26 +113,6 @@ public class ElasticsearchFullSyncService {
         }
         List<ItineraryDocument> docs = rows.stream().map(this::toItineraryDocument).collect(Collectors.toList());
         itinerarySearchRepository.saveAll(docs);
-        return summary(true, rows.size(), docs.size());
-    }
-
-    private Map<String, Object> syncRoadNodes() {
-        List<RoadNode> rows = roadNodeMapper.findAll();
-        if (roadNodeSearchRepository == null) {
-            return summary(false, rows.size(), 0);
-        }
-        List<RoadNodeDocument> docs = rows.stream().map(this::toRoadNodeDocument).collect(Collectors.toList());
-        roadNodeSearchRepository.saveAll(docs);
-        return summary(true, rows.size(), docs.size());
-    }
-
-    private Map<String, Object> syncRoadEdges() {
-        List<RoadEdge> rows = roadEdgeMapper.findAll();
-        if (roadEdgeSearchRepository == null) {
-            return summary(false, rows.size(), 0);
-        }
-        List<RoadEdgeDocument> docs = rows.stream().map(this::toRoadEdgeDocument).collect(Collectors.toList());
-        roadEdgeSearchRepository.saveAll(docs);
         return summary(true, rows.size(), docs.size());
     }
 
@@ -216,34 +182,6 @@ public class ElasticsearchFullSyncService {
         doc.setTransportMode(itinerary.getTransportMode());
         doc.setNotes(itinerary.getNotes());
         doc.setUpdatedAt(itinerary.getUpdatedAt());
-        return doc;
-    }
-
-    private RoadNodeDocument toRoadNodeDocument(RoadNode node) {
-        RoadNodeDocument doc = new RoadNodeDocument();
-        doc.setId(String.valueOf(node.getId()));
-        doc.setName(node.getName());
-        doc.setNodeType(node.getNodeType());
-        doc.setLatitude(node.getLatitude());
-        doc.setLongitude(node.getLongitude());
-        return doc;
-    }
-
-    private RoadEdgeDocument toRoadEdgeDocument(RoadEdge edge) {
-        RoadEdgeDocument doc = new RoadEdgeDocument();
-        doc.setId(String.valueOf(edge.getId()));
-        doc.setDistanceMeters(edge.getDistanceMeters());
-        doc.setIdealSpeed(edge.getIdealSpeed());
-        doc.setCongestion(edge.getCongestion());
-        doc.setAllowedTransport(edge.getAllowedTransport());
-        if (edge.getFromNode() != null) {
-            doc.setFromNodeId(edge.getFromNode().getId());
-            doc.setFromNodeName(edge.getFromNode().getName());
-        }
-        if (edge.getToNode() != null) {
-            doc.setToNodeId(edge.getToNode().getId());
-            doc.setToNodeName(edge.getToNode().getName());
-        }
         return doc;
     }
 

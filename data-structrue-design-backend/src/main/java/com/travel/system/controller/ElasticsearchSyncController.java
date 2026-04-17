@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/search")
-@Tag(name = "Elasticsearch 同步", description = "一键将业务表数据全量同步到 Elasticsearch")
+@Tag(name = "Elasticsearch 同步", description = "一键将可检索业务表数据全量同步到 Elasticsearch")
 public class ElasticsearchSyncController {
 
     private final ElasticsearchFullSyncService elasticsearchFullSyncService;
@@ -21,7 +21,7 @@ public class ElasticsearchSyncController {
         this.elasticsearchFullSyncService = elasticsearchFullSyncService;
     }
 
-    @Operation(summary = "全量同步所有业务表到 ES", description = "按表全量读取 MySQL 并批量写入 Elasticsearch 索引")
+    @Operation(summary = "全量同步可检索业务表到 ES", description = "按表全量读取 MySQL 并批量写入 Elasticsearch 索引（不包含 road_node / road_edge）")
     @ApiResponse(responseCode = "200", description = "同步完成")
     @PostMapping("/sync-all")
     public Map<String, Object> syncAll() {
