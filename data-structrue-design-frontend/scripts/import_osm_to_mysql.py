@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import math
+import random
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -100,18 +101,20 @@ def upsert_destination(cursor, feature: OsmFeature) -> int:
     tourism = feature.tags.get("tourism")
     description = feature.tags.get("description") or feature.tags.get("name:en")
     scene_type = tourism or feature.tags.get("historic")
+    rating = round(random.uniform(3.0, 4.9), 1)
     cursor.execute(
         """
-        INSERT INTO destination (name, category, description, latitude, longitude, scene_type, heat, rating)
-        VALUES (%s, %s, %s, %s, %s, %s, NULL, NULL)
+        INSERT INTO destination (name, category, description, latitude, longitude, scene_type, rating)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             category=VALUES(category),
             description=VALUES(description),
             latitude=VALUES(latitude),
             longitude=VALUES(longitude),
-            scene_type=VALUES(scene_type)
+            scene_type=VALUES(scene_type),
+            rating=VALUES(rating)
         """,
-        (feature.name, tourism, description, feature.latitude, feature.longitude, scene_type),
+        (feature.name, tourism, description, feature.latitude, feature.longitude, scene_type, rating),
     )
     cursor.execute("SELECT id FROM destination WHERE name=%s", (feature.name,))
     row = cursor.fetchone()
@@ -140,12 +143,13 @@ def upsert_food(cursor, feature: OsmFeature, destination_id: Optional[int]) -> b
     exists = cursor.fetchone()
     if exists:
         return False
+    rating = round(random.uniform(3.0, 4.9), 1)
     cursor.execute(
         """
-        INSERT INTO food (name, cuisine, store_name, heat, rating, distance_meters, destination_id)
-        VALUES (%s, %s, %s, NULL, NULL, NULL, %s)
+        INSERT INTO food (name, cuisine, store_name, heat, rating, destination_id)
+        VALUES (%s, %s, %s, NULL, %s, %s)
         """,
-        (feature.name, cuisine, store_name, destination_id),
+        (feature.name, cuisine, store_name, rating, destination_id),
     )
     return True
 
@@ -158,8 +162,11 @@ def nearest_destination_id(destinations: List[Tuple[int, float, float]], lat: fl
         if best_distance is None or distance < best_distance:
             best_distance = distance
             best_id = destination_id
-    if best_distance is None or best_distance > max_link_meters:
+    if best_distance is None:
         return None
+    if best_distance > max_link_meters:
+        # 避免 destination_id 为空：超出阈值时回退为最近的目的地。
+        return best_id
     return best_id
 
 
