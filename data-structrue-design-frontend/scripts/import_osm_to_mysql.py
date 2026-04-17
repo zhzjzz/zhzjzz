@@ -195,7 +195,13 @@ def main() -> None:
     parser.add_argument("--password", required=True)
     parser.add_argument("--database", required=True)
     parser.add_argument("--max-link-meters", type=float, default=2000.0, help="facility/food 关联最近目的地的最大距离")
-    parser.add_argument("--strict-link-radius", action="store_true", help="超出 max-link-meters 时保持 destination_id 为空")
+    parser.add_argument(
+        "--strict-link-radius",
+        "--require-link-within-radius",
+        dest="strict_link_radius",
+        action="store_true",
+        help="超出 max-link-meters 时保持 destination_id 为空",
+    )
     parser.add_argument("--limit", type=int, default=0, help="仅导入前 N 条（0 表示不限）")
     args = parser.parse_args()
 
