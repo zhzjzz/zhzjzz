@@ -20,14 +20,15 @@ mvn spring-boot:run
 ```
 
 可通过环境变量配置：
-- `MYSQL_URL` / `MYSQL_USERNAME` / `MYSQL_PASSWORD`（默认使用内置 H2 内存库；设置后可切换到 MySQL）
+- `MYSQL_URL` / `MYSQL_USERNAME` / `MYSQL_PASSWORD`（默认即 MySQL：`jdbc:mysql://localhost:3306/travel_system`，用户默认 `root`）
 - `ES_URIS`
 - `SERVER_PORT`
-- `GRAPHHOPPER_ENABLED`（默认 `false`）
+- `GRAPHHOPPER_ENABLED`（默认 `true`）
 - `GRAPHHOPPER_OSM_FILE`（默认 `data/osm/china-latest.osm.pbf`）
 - `GRAPHHOPPER_GRAPH_LOCATION`（默认 `data/graph-cache`）
 - `GRAPHHOPPER_PROFILE`（默认 `car`）
 - `GRAPHHOPPER_VEHICLE`（默认 `car`）
+- `ES_REPOSITORIES_ENABLED`（默认 `true`）
 
 默认地址：`http://localhost:8080`
 
