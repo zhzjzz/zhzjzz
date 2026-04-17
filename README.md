@@ -20,7 +20,7 @@ mvn spring-boot:run
 ```
 
 可通过环境变量配置：
-- `MYSQL_URL` / `MYSQL_USERNAME` / `MYSQL_PASSWORD` （默认即 MySQL: `jdbc:mysql://localhost:3306/travel_system`；`MYSQL_USERNAME` 与 `MYSQL_PASSWORD` 需显式设置）
+- `MYSQL_URL` / `MYSQL_USERNAME` / `MYSQL_PASSWORD` （默认即 MySQL: `jdbc:mysql://localhost:3306/travel_system`；`MYSQL_USERNAME` 与 `MYSQL_PASSWORD` 需显式设置，否则应用启动会失败）
 - `ES_URIS`
 - `SERVER_PORT`
 - `GRAPHHOPPER_ENABLED`（默认 `true`）
