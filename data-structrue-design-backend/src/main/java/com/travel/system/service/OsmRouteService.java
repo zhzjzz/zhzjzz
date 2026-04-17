@@ -37,8 +37,7 @@ public class OsmRouteService {
             Map.entry("transit", PROFILE_PUBLIC_TRANSPORT),
             Map.entry("bus", PROFILE_PUBLIC_TRANSPORT),
             Map.entry("subway", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("pt", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("公共交通", PROFILE_PUBLIC_TRANSPORT)
+            Map.entry("pt", PROFILE_PUBLIC_TRANSPORT)
     );
 
     private final GraphHopper graphHopper;

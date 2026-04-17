@@ -23,7 +23,7 @@ const transportModes = [
   { value: 'car', label: '汽车' },
   { value: 'bike', label: '自行车' },
   { value: 'walk', label: '徒步' },
-  { value: 'public_transport', label: '公共交通' },
+  { value: 'public_transport', label: '公共交通（步行近似）' },
 ]
 
 const selectableEndDestinations = computed(() =>

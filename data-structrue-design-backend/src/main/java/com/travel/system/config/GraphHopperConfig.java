@@ -29,6 +29,7 @@ public class GraphHopperConfig {
                 new Profile(PROFILE_CAR).setVehicle(PROFILE_CAR).setWeighting("fastest"),
                 new Profile(PROFILE_BIKE).setVehicle(PROFILE_BIKE).setWeighting("fastest"),
                 new Profile(PROFILE_FOOT).setVehicle(PROFILE_FOOT).setWeighting("fastest"),
+                // 当前仅使用 OSM 路网，公共交通先按步行近似，后续可接入 GTFS 做真实公交/地铁换乘规划。
                 new Profile(PROFILE_PUBLIC_TRANSPORT).setVehicle(PROFILE_FOOT).setWeighting("fastest")
         );
         hopper.getCHPreparationHandler().setCHProfiles(
