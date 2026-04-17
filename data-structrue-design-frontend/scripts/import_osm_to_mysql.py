@@ -154,7 +154,13 @@ def upsert_food(cursor, feature: OsmFeature, destination_id: Optional[int]) -> b
     return True
 
 
-def nearest_destination_id(destinations: List[Tuple[int, float, float]], lat: float, lon: float, max_link_meters: float) -> Optional[int]:
+def nearest_destination_id(
+    destinations: List[Tuple[int, float, float]],
+    lat: float,
+    lon: float,
+    max_link_meters: float,
+    strict_link_radius: bool = False,
+) -> Optional[int]:
     best_id = None
     best_distance = None
     for destination_id, d_lat, d_lon in destinations:
@@ -164,9 +170,11 @@ def nearest_destination_id(destinations: List[Tuple[int, float, float]], lat: fl
             best_id = destination_id
     if best_distance is None:
         return None
-    if best_distance > max_link_meters:
-        # 避免 destination_id 为空：超出阈值时回退为最近的目的地。
+    if best_distance > max_link_meters and not strict_link_radius:
+        # Fallback to nearest destination when threshold is exceeded.
         return best_id
+    if best_distance > max_link_meters:
+        return None
     return best_id
 
 
@@ -186,6 +194,7 @@ def main() -> None:
     parser.add_argument("--password", required=True)
     parser.add_argument("--database", required=True)
     parser.add_argument("--max-link-meters", type=float, default=2000.0, help="facility/food 关联最近目的地的最大距离")
+    parser.add_argument("--strict-link-radius", action="store_true", help="超出 max-link-meters 时保持 destination_id 为空")
     parser.add_argument("--limit", type=int, default=0, help="仅导入前 N 条（0 表示不限）")
     args = parser.parse_args()
 
@@ -217,13 +226,13 @@ def main() -> None:
             for feature in features:
                 if classify(feature.tags) == "facility":
                     destination_id = nearest_destination_id(
-                        destination_points, feature.latitude, feature.longitude, args.max_link_meters
+                        destination_points, feature.latitude, feature.longitude, args.max_link_meters, args.strict_link_radius
                     )
                     insert_facility(cursor, feature, destination_id)
                     facility_count += 1
                 elif classify(feature.tags) == "food":
                     destination_id = nearest_destination_id(
-                        destination_points, feature.latitude, feature.longitude, args.max_link_meters
+                        destination_points, feature.latitude, feature.longitude, args.max_link_meters, args.strict_link_radius
                     )
                     if upsert_food(cursor, feature, destination_id):
                         food_inserted_count += 1
