@@ -6,7 +6,7 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 
 ## OSM 导入脚本（Python）
 
-前端目录提供了 `scripts/import_osm_to_mysql.py`，可将 OSM `.osm` 数据导入后端 MySQL 的 `destination` 与 `facility` 表。
+前端目录提供了 `scripts/import_osm_to_mysql.py`，可将 OSM `.osm` 数据导入后端 MySQL 的 `destination`、`facility` 与 `food` 表。
 
 ```bash
 python scripts/import_osm_to_mysql.py \

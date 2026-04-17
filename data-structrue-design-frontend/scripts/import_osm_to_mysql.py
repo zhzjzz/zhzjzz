@@ -8,13 +8,15 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import pymysql
 
 
-TOURISM_DESTINATION_TAGS = {
+DESTINATION_TOURISM_TAGS = {
     "attraction", "museum", "zoo", "theme_park", "viewpoint", "gallery", "camp_site"
 }
 AMENITY_FACILITY_TAGS = {
-    "toilets", "cafe", "restaurant", "fast_food", "parking", "hospital", "pharmacy",
+    "toilets", "parking", "hospital", "pharmacy",
     "bank", "atm", "bus_station", "fuel", "post_office", "library", "school", "university"
 }
+AMENITY_FOOD_TAGS = {"restaurant", "fast_food", "cafe", "food_court", "bar", "pub", "ice_cream"}
+SHOP_FOOD_TAGS = {"bakery", "confectionery", "beverages", "tea", "coffee", "deli"}
 EARTH_RADIUS_METERS = 6_371_000.0
 
 
@@ -40,8 +42,10 @@ def classify(tags: Dict[str, str]) -> Optional[str]:
     tourism = (tags.get("tourism") or "").strip().lower()
     amenity = (tags.get("amenity") or "").strip().lower()
     shop = (tags.get("shop") or "").strip().lower()
-    if tourism in TOURISM_DESTINATION_TAGS:
+    if tourism in DESTINATION_TOURISM_TAGS:
         return "destination"
+    if amenity in AMENITY_FOOD_TAGS or shop in SHOP_FOOD_TAGS:
+        return "food"
     if amenity in AMENITY_FACILITY_TAGS or shop:
         return "facility"
     return None
@@ -125,6 +129,27 @@ def insert_facility(cursor, feature: OsmFeature, destination_id: Optional[int]) 
     )
 
 
+def upsert_food(cursor, feature: OsmFeature, destination_id: Optional[int]) -> bool:
+    cuisine = feature.tags.get("cuisine")
+    store_name = feature.tags.get("brand") or feature.tags.get("operator") or feature.name
+    # 使用 MySQL 的 null-safe 等号 `<=>`，保证 destination_id 为 NULL 时也能正确去重。
+    cursor.execute(
+        "SELECT id FROM food WHERE name=%s AND (destination_id <=> %s) LIMIT 1",
+        (feature.name, destination_id),
+    )
+    exists = cursor.fetchone()
+    if exists:
+        return False
+    cursor.execute(
+        """
+        INSERT INTO food (name, cuisine, store_name, heat, rating, distance_meters, destination_id)
+        VALUES (%s, %s, %s, NULL, NULL, NULL, %s)
+        """,
+        (feature.name, cuisine, store_name, destination_id),
+    )
+    return True
+
+
 def nearest_destination_id(destinations: List[Tuple[int, float, float]], lat: float, lon: float, max_link_meters: float) -> Optional[int]:
     best_id = None
     best_distance = None
@@ -138,15 +163,22 @@ def nearest_destination_id(destinations: List[Tuple[int, float, float]], lat: fl
     return best_id
 
 
+def load_destination_points(cursor) -> List[Tuple[int, float, float]]:
+    cursor.execute("SELECT id, latitude, longitude FROM destination WHERE latitude IS NOT NULL AND longitude IS NOT NULL")
+    rows = cursor.fetchall()
+    return [(int(row[0]), float(row[1]), float(row[2])) for row in rows]
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="将 OSM(.osm XML) 数据导入 MySQL destination/facility 表")
+    """解析 OSM 文件并导入 destination/facility/food 三张表。"""
+    parser = argparse.ArgumentParser(description="将 OSM(.osm XML) 数据导入 MySQL destination/facility/food 表")
     parser.add_argument("--osm-file", required=True, help="OSM 文件路径（.osm XML）")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=3306)
     parser.add_argument("--user", required=True)
     parser.add_argument("--password", required=True)
     parser.add_argument("--database", required=True)
-    parser.add_argument("--max-link-meters", type=float, default=2000.0, help="设施关联最近目的地的最大距离")
+    parser.add_argument("--max-link-meters", type=float, default=2000.0, help="facility/food 关联最近目的地的最大距离")
     parser.add_argument("--limit", type=int, default=0, help="仅导入前 N 条（0 表示不限）")
     args = parser.parse_args()
 
@@ -166,13 +198,14 @@ def main() -> None:
     try:
         destination_count = 0
         facility_count = 0
-        destination_points: List[Tuple[int, float, float]] = []
+        food_inserted_count = 0
         with conn.cursor() as cursor:
             for feature in features:
                 if classify(feature.tags) == "destination":
-                    destination_id = upsert_destination(cursor, feature)
-                    destination_points.append((destination_id, feature.latitude, feature.longitude))
+                    upsert_destination(cursor, feature)
                     destination_count += 1
+
+            destination_points = load_destination_points(cursor)
 
             for feature in features:
                 if classify(feature.tags) == "facility":
@@ -181,11 +214,18 @@ def main() -> None:
                     )
                     insert_facility(cursor, feature, destination_id)
                     facility_count += 1
+                elif classify(feature.tags) == "food":
+                    destination_id = nearest_destination_id(
+                        destination_points, feature.latitude, feature.longitude, args.max_link_meters
+                    )
+                    if upsert_food(cursor, feature, destination_id):
+                        food_inserted_count += 1
 
         conn.commit()
-        print(f"导入完成：destination={destination_count}, facility={facility_count}")
-    except Exception:
+        print(f"导入完成：destination={destination_count}, facility={facility_count}, food={food_inserted_count}")
+    except Exception as exc:
         conn.rollback()
+        print(f"导入失败，已回滚事务: {exc}")
         raise
     finally:
         conn.close()
