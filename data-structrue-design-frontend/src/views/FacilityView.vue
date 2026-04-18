@@ -27,6 +27,9 @@ const loadFacilityTypeOptions = async (keyword = '') => {
     const type = keyword.trim()
     const { data } = await listFacilities(type || undefined)
     facilityTypeOptions.value = [...new Set(data.map((item) => item.facilityType).filter(Boolean))]
+  } catch (error) {
+    facilityTypeOptions.value = []
+    ElMessage.error('加载设施类别失败，请稍后重试')
   } finally {
     loadingTypeOptions.value = false
   }
