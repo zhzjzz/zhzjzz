@@ -67,7 +67,7 @@ public class DestinationService {
         if (destinationSearchRepository != null) {
             try {
                 List<DestinationDocument> docs = destinationSearchRepository
-                    .findByNameContainingOrCategoryContaining(keyword, keyword);
+                    .findByNameOrCategory(keyword, keyword);
                 return docs.stream().map(this::toDestination).collect(Collectors.toList());
             } catch (Exception e) {
                 // ES 搜索失败时回退到 MySQL

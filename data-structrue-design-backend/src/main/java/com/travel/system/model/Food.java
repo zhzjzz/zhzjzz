@@ -8,6 +8,7 @@ import lombok.Data;
 public class Food {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(columnDefinition = "BIGINT")
     private Long id;
     private String name;
     private String cuisine;
@@ -17,6 +18,6 @@ public class Food {
     @Transient
     private Double distanceMeters;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destination_id")
+    @JoinColumn(name = "destination_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Destination destination;
 }

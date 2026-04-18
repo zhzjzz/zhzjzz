@@ -7,8 +7,11 @@ import java.util.List;
 
 /**
  * Elasticsearch Repository for {@link DiaryDocument}.
- * Moved from repository package to mapper package.
+ * 使用 match query 走 IK 分词，而非 wildcard (Containing) 查询。
  */
 public interface DiarySearchRepository extends ElasticsearchRepository<DiaryDocument, String> {
-    List<DiaryDocument> findByTitleContainingOrContentContaining(String title, String content);
+    /**
+     * 根据标题或内容进行全文搜索（IK 分词匹配）
+     */
+    List<DiaryDocument> findByTitleOrContent(String title, String content);
 }

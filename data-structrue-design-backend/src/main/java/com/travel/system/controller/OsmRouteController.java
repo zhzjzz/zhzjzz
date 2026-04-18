@@ -21,7 +21,7 @@ public class OsmRouteController {
         this.osmRouteService = osmRouteService;
     }
 
-    @Operation(summary = "经纬度路线规划", description = "输入起终点经纬度和出行方式，返回路线点集、总距离和预计耗时（公共交通当前按步行近似）")
+    @Operation(summary = "经纬度路线规划", description = "输入起终点经纬度和出行方式，返回路线点集、总距离和预计耗时。支持出行方式：car（汽车）、bike/bicycle（自行车）、foot/walk/walking（徒步）")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "规划成功"),
             @ApiResponse(responseCode = "400", description = "参数错误或路径不可达"),

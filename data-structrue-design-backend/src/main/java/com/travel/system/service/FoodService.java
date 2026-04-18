@@ -57,7 +57,7 @@ public class FoodService {
         if (foodSearchRepository != null) {
             try {
                 List<FoodDocument> docs = foodSearchRepository
-                    .findByNameContainingOrCuisineContainingOrStoreNameContaining(keyword, keyword, keyword);
+                    .findByNameOrCuisineOrStoreName(keyword, keyword, keyword);
                 return docs.stream().map(this::toFood).collect(Collectors.toList());
             } catch (Exception e) {
                 // ES 搜索失败时回退到 MySQL

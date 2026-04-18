@@ -84,7 +84,7 @@ public class DiaryService {
         if (diarySearchRepository != null) {
             try {
                 List<DiaryDocument> docs = diarySearchRepository
-                        .findByTitleContainingOrContentContaining(keyword, keyword);
+                        .findByTitleOrContent(keyword, keyword);
                 return docs.stream().map(this::toDiary).collect(Collectors.toList());
             } catch (Exception e) {
                 // ES 搜索失败时回退到 MySQL
@@ -137,7 +137,7 @@ public class DiaryService {
      */
     public List<DiaryDocument> fullTextSearch(String keyword) {
         if (diarySearchRepository != null) {
-            return diarySearchRepository.findByTitleContainingOrContentContaining(keyword, keyword);
+            return diarySearchRepository.findByTitleOrContent(keyword, keyword);
         }
         // ES 不可用时回退到 MySQL
         return diaryRepository.findByTitleOrContentContainingIgnoreCase(keyword).stream()

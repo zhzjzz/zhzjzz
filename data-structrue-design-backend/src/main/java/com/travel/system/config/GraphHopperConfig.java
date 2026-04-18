@@ -3,7 +3,8 @@ package com.travel.system.config;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.config.CHProfile;
 import com.graphhopper.config.Profile;
-import com.graphhopper.util.CustomModel; // 【新增引入 CustomModel】
+import com.graphhopper.json.Statement;
+import com.graphhopper.util.CustomModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +19,6 @@ public class GraphHopperConfig {
     private static final String PROFILE_CAR = "car";
     private static final String PROFILE_BIKE = "bike";
     private static final String PROFILE_FOOT = "foot";
-    private static final String PROFILE_PUBLIC_TRANSPORT = "public_transport";
 
     @Bean(destroyMethod = "close")
     @ConditionalOnProperty(prefix = "routing.graphhopper", name = "enabled", havingValue = "true")
@@ -27,20 +27,29 @@ public class GraphHopperConfig {
         hopper.setOSMFile(resolveBackendRelativePath(properties.getOsmFile()));
         hopper.setGraphHopperLocation(resolveBackendRelativePath(properties.getGraphLocation()));
 
-        // 【修改点：全部改为 custom 权重并传入 CustomModel】
+        // GraphHopper 8.x 要求使用 custom 权重。通过 CustomModel 的优先级规则：
+        //   1) 大幅惩罚渡口(road_environment == FERRY)，避免步行/骑车穿越水域；
+        //   2) 惩罚 destination-only 道路(road_access == DESTINATION)，保证汽车沿公共道路行驶。
+        CustomModel carModel = new CustomModel();
+        carModel.addToPriority(Statement.If("road_access == DESTINATION", Statement.Op.MULTIPLY, "0.1"));
+        carModel.addToPriority(Statement.If("road_environment == FERRY", Statement.Op.MULTIPLY, "0.01"));
+
+        CustomModel bikeModel = new CustomModel();
+        bikeModel.addToPriority(Statement.If("road_environment == FERRY", Statement.Op.MULTIPLY, "0.01"));
+
+        CustomModel footModel = new CustomModel();
+        footModel.addToPriority(Statement.If("road_environment == FERRY", Statement.Op.MULTIPLY, "0.01"));
+
         hopper.setProfiles(
-                new Profile(PROFILE_CAR).setVehicle(PROFILE_CAR).setWeighting("custom").setCustomModel(new CustomModel()),
-                new Profile(PROFILE_BIKE).setVehicle(PROFILE_BIKE).setWeighting("custom").setCustomModel(new CustomModel()),
-                new Profile(PROFILE_FOOT).setVehicle(PROFILE_FOOT).setWeighting("custom").setCustomModel(new CustomModel()),
-                // TODO: 接入 GTFS 后替换为真实公共交通 profile；当前 OSM-only 场景下按步行近似。
-                new Profile(PROFILE_PUBLIC_TRANSPORT).setVehicle(PROFILE_FOOT).setWeighting("custom").setCustomModel(new CustomModel())
+                new Profile(PROFILE_CAR).setVehicle("car").setWeighting("custom").setCustomModel(carModel),
+                new Profile(PROFILE_BIKE).setVehicle("bike").setWeighting("custom").setCustomModel(bikeModel),
+                new Profile(PROFILE_FOOT).setVehicle("foot").setWeighting("custom").setCustomModel(footModel)
         );
 
         hopper.getCHPreparationHandler().setCHProfiles(
                 new CHProfile(PROFILE_CAR),
                 new CHProfile(PROFILE_BIKE),
-                new CHProfile(PROFILE_FOOT),
-                new CHProfile(PROFILE_PUBLIC_TRANSPORT)
+                new CHProfile(PROFILE_FOOT)
         );
         hopper.importOrLoad();
         return hopper;

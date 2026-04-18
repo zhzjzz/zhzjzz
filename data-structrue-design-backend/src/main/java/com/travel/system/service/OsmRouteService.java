@@ -24,21 +24,14 @@ public class OsmRouteService {
     private static final String PROFILE_CAR = "car";
     private static final String PROFILE_BIKE = "bike";
     private static final String PROFILE_FOOT = "foot";
-    private static final String PROFILE_PUBLIC_TRANSPORT = "public_transport";
-    // 官方建议前端入参：car / bike / walk / public_transport；其余为兼容别名。
+    // 支持前端入参：car / bike / walk；其余为兼容别名。已移除公共交通。
     private static final Map<String, String> MODE_PROFILE_MAPPING = Map.ofEntries(
             Map.entry("car", PROFILE_CAR),
             Map.entry("bike", PROFILE_BIKE),
             Map.entry("bicycle", PROFILE_BIKE),
             Map.entry("foot", PROFILE_FOOT),
             Map.entry("walk", PROFILE_FOOT),
-            Map.entry("walking", PROFILE_FOOT),
-            Map.entry("public_transport", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("public-transport", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("transit", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("bus", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("subway", PROFILE_PUBLIC_TRANSPORT),
-            Map.entry("pt", PROFILE_PUBLIC_TRANSPORT)
+            Map.entry("walking", PROFILE_FOOT)
     );
 
     private final GraphHopper graphHopper;

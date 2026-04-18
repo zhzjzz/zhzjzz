@@ -90,7 +90,7 @@ public class FacilitySearchService {
                     List<FacilityDocument> docs;
                     if (keyword != null && !keyword.isBlank()) {
                         docs = facilitySearchRepository
-                            .findByNameContainingOrFacilityTypeContainingOrDestinationNameContaining(
+                            .findByNameOrFacilityTypeOrDestinationName(
                                 keyword, keyword, keyword);
                     } else {
                         docs = StreamSupport.stream(

@@ -8,11 +8,12 @@ import java.util.List;
 
 /**
  * Elasticsearch Repository for {@link FoodDocument}.
+ * 使用 match query 走 IK 分词，而非 wildcard (Containing) 查询。
  */
 @Repository
 public interface FoodSearchRepository extends ElasticsearchRepository<FoodDocument, String> {
     /**
-     * 根据名称、菜系或店名进行模糊搜索
+     * 根据名称、菜系或店名进行全文搜索（IK 分词匹配）
      */
-    List<FoodDocument> findByNameContainingOrCuisineContainingOrStoreNameContaining(String name, String cuisine, String storeName);
+    List<FoodDocument> findByNameOrCuisineOrStoreName(String name, String cuisine, String storeName);
 }

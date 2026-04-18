@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getOsmRoute, listDestinations } from '../api/travel'
+import { wgs84ToGcj02, wgs84ToGcj02Batch } from '../utils/coordTransform'
 
 const CHINA_CENTER = [35.8617, 104.1954]
 const DEFAULT_ZOOM = 4
@@ -49,9 +50,8 @@ const initMap = () => {
     {
       attribution: '&copy; 高德地图',
       subdomains: ['1', '2', '3', '4'],
-      maxZoom: 20,
-      maxNativeZoom: 19,
-      detectRetina: true,
+      maxZoom: 18,
+      maxNativeZoom: 18,
       updateWhenZooming: false,
       keepBuffer: 8,
     }
@@ -66,7 +66,9 @@ const drawRoute = (path) => {
     routeLayer.value = null
   }
   if (!path?.length) return
-  routeLayer.value = L.polyline(path, { color: '#ff385c', weight: 5 }).addTo(mapInstance.value)
+  // 高德底图使用 GCJ-02 坐标系，需将 GraphHopper 返回的 WGS-84 坐标转换后绘制
+  const gcjPath = wgs84ToGcj02Batch(path)
+  routeLayer.value = L.polyline(gcjPath, { color: '#ff385c', weight: 5 }).addTo(mapInstance.value)
   mapInstance.value.fitBounds(routeLayer.value.getBounds(), { padding: [24, 24] })
 }
 
@@ -74,7 +76,9 @@ const drawMarkers = () => {
   if (!mapInstance.value || !markerLayer.value) return
   markerLayer.value.clearLayers()
   if (selectedStart.value) {
-    L.circleMarker([selectedStart.value.latitude, selectedStart.value.longitude], {
+    // WGS-84 → GCJ-02 转换，消除高德底图偏移
+    const [gcjLng, gcjLat] = wgs84ToGcj02(selectedStart.value.longitude, selectedStart.value.latitude)
+    L.circleMarker([gcjLat, gcjLng], {
       radius: 7,
       color: '#1677ff',
       fillColor: '#1677ff',
@@ -84,7 +88,8 @@ const drawMarkers = () => {
       .addTo(markerLayer.value)
   }
   if (selectedEnd.value) {
-    L.circleMarker([selectedEnd.value.latitude, selectedEnd.value.longitude], {
+    const [gcjLng, gcjLat] = wgs84ToGcj02(selectedEnd.value.longitude, selectedEnd.value.latitude)
+    L.circleMarker([gcjLat, gcjLng], {
       radius: 7,
       color: '#22c55e',
       fillColor: '#22c55e',
