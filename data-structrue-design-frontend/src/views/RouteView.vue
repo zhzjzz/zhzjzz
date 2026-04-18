@@ -29,7 +29,6 @@ const transportModes = [
   { value: 'car', label: '汽车' },
   { value: 'bike', label: '自行车' },
   { value: 'walk', label: '徒步' },
-  { value: 'public_transport', label: '公共交通（步行近似）' },
 ]
 
 const selectedStops = computed(() =>
@@ -177,26 +176,32 @@ const submit = async () => {
     const mergedPath = []
     let currentPoint = startSelection.value
 
-    for (const stop of destinationStops.value) {
+    for (let index = 0; index < destinationStops.value.length; index += 1) {
+      const stop = destinationStops.value[index]
       const destination = stop.selection
-      const { data } = await getOsmRoute({
-        startLat: currentPoint.latitude,
-        startLon: currentPoint.longitude,
-        endLat: destination.latitude,
-        endLon: destination.longitude,
-        mode: form.value.mode,
-      })
-      totalDistance += Number(data?.distance || 0)
-      totalTime += Number(data?.time || 0)
-      const segmentPath = Array.isArray(data?.path) ? data.path : []
-      if (segmentPath.length) {
-        if (mergedPath.length) {
-          mergedPath.push(...segmentPath.slice(1))
-        } else {
-          mergedPath.push(...segmentPath)
+      try {
+        const { data } = await getOsmRoute({
+          startLat: currentPoint.latitude,
+          startLon: currentPoint.longitude,
+          endLat: destination.latitude,
+          endLon: destination.longitude,
+          mode: form.value.mode,
+        })
+        totalDistance += Number(data?.distance ?? 0)
+        totalTime += Number(data?.time ?? 0)
+        const segmentPath = Array.isArray(data?.path) ? data.path : []
+        if (segmentPath.length) {
+          if (mergedPath.length) {
+            mergedPath.push(...segmentPath.slice(1))
+          } else {
+            mergedPath.push(...segmentPath)
+          }
         }
+        currentPoint = destination
+      } catch (error) {
+        const segmentMessage = error?.response?.data?.message || error?.message || 'OSM 路线规划失败'
+        throw new Error(`第 ${index + 1} 段（${destination?.name || `目的地${index + 1}`})规划失败：${segmentMessage}`)
       }
-      currentPoint = destination
     }
 
     routeResult.value = {
@@ -208,7 +213,7 @@ const submit = async () => {
     drawMarkers()
     ElMessage.success('路线规划成功')
   } catch (error) {
-    ElMessage.error(error.response?.data?.message || '路线规划失败，请检查后端 GraphHopper 数据文件配置')
+    ElMessage.error(error?.message || error?.response?.data?.message || '路线规划失败，请检查后端 GraphHopper 数据文件配置')
   } finally {
     loading.value = false
   }
@@ -234,7 +239,7 @@ onBeforeUnmount(() => {
       <div class="module-header">
         <div>
           <h2>OSM 路线规划</h2>
-          <p class="module-subtitle">支持搜索起点与多个目的地，按顺序进行分段路线规划并汇总总里程。</p>
+          <p class="module-subtitle">支持搜索起点与多个目的地，按顺序进行分段路线规划并汇总总距离和时间。</p>
         </div>
       </div>
 
@@ -266,7 +271,7 @@ onBeforeUnmount(() => {
                     @select="(item) => onDestinationSelect(index, item)"
                     @input="(value) => onDestinationInput(index, value)"
                   />
-                  <el-button type="danger" plain @click="removeDestinationStop(index)" :disabled="destinationStops.length <= 1">删除</el-button>
+                  <el-button type="danger" plain :disabled="destinationStops.length <= 1" @click="removeDestinationStop(index)">删除</el-button>
                   <el-button v-if="index === destinationStops.length - 1" type="primary" plain @click="addDestinationStop">添加</el-button>
                 </div>
               </div>

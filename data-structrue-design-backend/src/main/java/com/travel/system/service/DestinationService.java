@@ -5,6 +5,8 @@ import com.travel.system.mapper.DestinationMapper;
 import com.travel.system.repository.DestinationSearchRepository;
 import com.travel.system.model.Destination;
 import com.travel.system.search.DestinationDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class DestinationService {
+    private static final Logger log = LoggerFactory.getLogger(DestinationService.class);
 
     /** 目的地持久层（MyBatis Mapper）。 */
     private final DestinationMapper destinationMapper;
@@ -107,7 +110,8 @@ public class DestinationService {
                         .filter(destination -> destination.getLatitude() != null && destination.getLongitude() != null)
                         .limit(safeLimit)
                         .collect(Collectors.toList());
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Route destination ES search failed, fallback to MySQL. keyword={}", normalizedKeyword, e);
             }
         }
 
