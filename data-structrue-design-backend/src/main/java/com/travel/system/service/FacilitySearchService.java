@@ -220,16 +220,11 @@ public class FacilitySearchService {
         if (docs == null || docs.isEmpty()) {
             return List.of();
         }
-        List<Long> ids = docs.stream()
-                .map(FacilityDocument::getId)
-                .filter(Objects::nonNull)
-                .map(id -> {
-                    try {
-                        return Long.valueOf(id);
-                    } catch (NumberFormatException e) {
-                        return null;
-                    }
-                })
+        List<DocWithId> docsWithId = docs.stream()
+                .map(doc -> new DocWithId(doc, parseId(doc.getId())))
+                .toList();
+        List<Long> ids = docsWithId.stream()
+                .map(DocWithId::id)
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -240,31 +235,34 @@ public class FacilitySearchService {
                 .stream()
                 .collect(Collectors.toMap(Facility::getId, Function.identity(), (left, right) -> left));
 
-        Map<Long, Facility> mergedById = docs.stream()
-                .map(doc -> {
-                    try {
-                        Long id = Long.valueOf(doc.getId());
-                        Facility mysqlFacility = mysqlFacilitiesById.get(id);
-                        Facility merged = mysqlFacility != null ? mysqlFacility : toFacility(doc);
-                        return merged != null ? Map.entry(id, merged) : null;
-                    } catch (NumberFormatException e) {
-                        return null;
-                    }
+        Map<Long, Facility> mergedById = docsWithId.stream()
+                .filter(item -> item.id() != null)
+                .map(item -> {
+                    Facility mysqlFacility = mysqlFacilitiesById.get(item.id());
+                    Facility merged = mysqlFacility != null ? mysqlFacility : toFacility(item.doc());
+                    return merged != null ? Map.entry(item.id(), merged) : null;
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (left, right) -> left));
 
-        return docs.stream()
-                .map(doc -> {
-                    try {
-                        Long id = Long.valueOf(doc.getId());
-                        return mergedById.get(id);
-                    } catch (NumberFormatException e) {
-                        return null;
-                    }
-                })
+        return docsWithId.stream()
+                .map(item -> item.id() == null ? null : mergedById.get(item.id()))
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    private Long parseId(String id) {
+        if (id == null) {
+            return null;
+        }
+        try {
+            return Long.valueOf(id);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private record DocWithId(FacilityDocument doc, Long id) {
     }
 
     private record LatLng(double lat, double lon) {

@@ -103,12 +103,6 @@ public ItineraryController(ItineraryMapper itineraryMapper) {
         if (existing == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "行程不存在");
         }
-        if (itinerary.getUpdatedAt() != null
-                && existing.getUpdatedAt() != null
-                && itinerary.getUpdatedAt().isBefore(existing.getUpdatedAt())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "该行程已被其他协作者更新，请刷新后重试");
-        }
-
         itinerary.setId(id);
         var expectedUpdatedAt = itinerary.getUpdatedAt();
         itinerary.setUpdatedAt(LocalDateTime.now());

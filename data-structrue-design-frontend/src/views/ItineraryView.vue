@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createItinerary, getItinerary, listItineraries, updateItinerary } from '../api/travel'
 
@@ -173,19 +173,35 @@ const submitUpdate = async () => {
   }
 }
 
+const startSyncPolling = () => {
+  if (syncTimer.value) {
+    return
+  }
+  syncTimer.value = setInterval(load, 3000)
+}
+
+const stopSyncPolling = () => {
+  if (!syncTimer.value) {
+    return
+  }
+  clearInterval(syncTimer.value)
+  syncTimer.value = null
+}
+
 onMounted(async () => {
   await load()
-  syncTimer.value = setInterval(() => {
-    if (selectedId.value) {
-      load()
-    }
-  }, 3000)
 })
 
 onUnmounted(() => {
-  if (syncTimer.value) {
-    clearInterval(syncTimer.value)
+  stopSyncPolling()
+})
+
+watch(selectedId, (id) => {
+  if (id) {
+    startSyncPolling()
+    return
   }
+  stopSyncPolling()
 })
 </script>
 
