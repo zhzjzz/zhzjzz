@@ -1,6 +1,5 @@
 package com.travel.system.service;
 
-import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.travel.system.mapper.DestinationMapper;
 import com.travel.system.repository.DestinationSearchRepository;
@@ -90,6 +89,33 @@ public class DestinationService {
     public List<Destination> topK(int k) {
         List<Destination> all = destinationMapper.findAll();
         return recommendationService.topKDestinations(all, k);
+    }
+
+    public List<Destination> searchForRoute(String keyword, int limit) {
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        if (normalizedKeyword.isEmpty()) {
+            return List.of();
+        }
+
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+
+        if (destinationSearchRepository != null) {
+            try {
+                return destinationSearchRepository.findByNameOrCategory(normalizedKeyword, normalizedKeyword)
+                        .stream()
+                        .map(this::toDestination)
+                        .filter(destination -> destination.getLatitude() != null && destination.getLongitude() != null)
+                        .limit(safeLimit)
+                        .collect(Collectors.toList());
+            } catch (Exception ignored) {
+            }
+        }
+
+        return destinationMapper.findByKeyword(normalizedKeyword)
+                .stream()
+                .filter(destination -> destination.getLatitude() != null && destination.getLongitude() != null)
+                .limit(safeLimit)
+                .collect(Collectors.toList());
     }
 
     /**
