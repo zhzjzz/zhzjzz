@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import { useAppStore } from "../stores/app";
 import HomeView from "../views/HomeView.vue";
 import DestinationView from "../views/DestinationView.vue";
@@ -24,7 +24,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 });
 
@@ -34,14 +34,14 @@ const router = createRouter({
  * - 已登录后访问登录页会被重定向到首页。
  */
 router.beforeEach((to) => {
-  const appStore = useAppStore()
+  const appStore = useAppStore();
   if (to.meta.public && appStore.isLoggedIn) {
-    return { path: '/' }
+    return { path: "/" };
   }
   if (!to.meta.public && !appStore.isLoggedIn) {
-    return { path: '/login' }
+    return { path: "/login" };
   }
-  return true
+  return true;
 });
 
 export default router;

@@ -5,6 +5,12 @@ import AMapLoader from '@amap/amap-jsapi-loader'
 import { getOsmRoute, searchRouteDestinations } from '../api/travel'
 import { wgs84ToGcj02, wgs84ToGcj02Batch } from '../utils/coordTransform'
 
+// 高德 JS API 2.0 安全密钥（必须在 AMapLoader.load 之前设置）
+const amapSecret = (import.meta.env.VITE_AMAP_SECRET || '').trim()
+if (amapSecret) {
+  window._AMapSecurityConfig = { securityJsCode: amapSecret }
+}
+
 const CHINA_CENTER = [104.1954, 35.8617]
 const DEFAULT_ZOOM = 4
 const AMAP_VERSION = '2.0'
@@ -60,9 +66,17 @@ const clearMarkerLayers = () => {
 
 const initMap = async () => {
   const amapKey = (import.meta.env.VITE_AMAP_KEY || '').trim()
+  const amapSecret = (import.meta.env.VITE_AMAP_SECRET || '').trim()
   if (!amapKey) {
     ElMessage.warning('未配置 VITE_AMAP_KEY，无法加载高德地图')
     return
+  }
+
+  // 高德 JS API 2.0 需要设置安全密钥
+  if (amapSecret) {
+    window._AMapSecurityConfig = {
+      securityJsCode: amapSecret,
+    }
   }
 
   try {
@@ -388,18 +402,17 @@ onBeforeUnmount(() => {
       </el-form>
 
       <el-divider />
+      <div class="map-title">
+        <span>高德官方 JS API 地图</span>
+      </div>
+      <div id="route-map" class="route-map" />
 
+      <el-divider />
       <el-descriptions v-if="routeResult" :column="2" border>
         <el-descriptions-item label="总距离">{{ distanceKm }} km</el-descriptions-item>
         <el-descriptions-item label="预计耗时">{{ durationHours }} h</el-descriptions-item>
       </el-descriptions>
       <el-empty v-else description="请搜索起点和多个目的地后点击规划路线" />
-
-      <el-divider />
-      <div class="map-title">
-        <span>高德官方 JS API 地图</span>
-      </div>
-      <div id="route-map" class="route-map" />
     </el-card>
   </section>
 </template>
